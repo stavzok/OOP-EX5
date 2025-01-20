@@ -18,6 +18,7 @@ public class Sjavac {
         catch(IOException e) {
             System.err.println(e.getMessage());
             System.out.println(2);
+            return;
         }
 
         HandleCodeLines handler = new HandleCodeLines(lines);
@@ -27,6 +28,7 @@ public class Sjavac {
         catch (TypeOneException e){
             System.err.println(e.getMessage());
             System.out.println(1);
+            return;
         }
 
         System.out.println(0);

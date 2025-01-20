@@ -16,7 +16,6 @@ public class HandleCodeLines {
             PATTERN_TYPE + "\\s*" + NAME_REGEX + "\\s*(,\\s*final?\\s*" + PATTERN_TYPE + "\\s*" + NAME_REGEX + ")*)?\\)\\s*";
     private final String INT_REGEX = "[+-]?\\d+";
     private final String DOUBLE_REGEX = "[+-]?(\\d+(\\.\\d*)?|\\.\\d+)";
-
     private final String INT_PATTERN =
             "(final\\s+)?int\\s+"+ NAME_REGEX + "(\\s*=\\s*([+-]?\\d+|" + NAME_REGEX + "))?(\\s*,\\s*" + NAME_REGEX +
                     "(\\s*=\\s*([+-]?\\d+|" + NAME_REGEX + "))?)*\\s*;";
@@ -38,11 +37,6 @@ public class HandleCodeLines {
     private final Matcher VARIABLE_MATCHER = VARIABLE_PATTERN.matcher("");
     private final Pattern FUNCTION_NAME_PATTERN = Pattern.compile(FUNCTION_NAME_REGEX + "\\{");
     private final Matcher FUNCTION_NAME_MATCHER = FUNCTION_NAME_PATTERN.matcher("");
-    private int scopeLevel = 0;
-    private enum ScopeLevel {
-        OUTER_SCOPE,      // 0 - Outer Scope
-        FUNCTION_SCOPE   // 1 - Function Scope
-    }
     private final String INT_PATTERN_ASSIGN =
             NAME_REGEX + "(\\s*=\\s*([+-]?\\d+|" + NAME_REGEX + "))?(\\s*,\\s*" + NAME_REGEX +
                     "(\\s*=\\s*([+-]?\\d+|" + NAME_REGEX + "))?)*\\s*;";
@@ -62,10 +56,11 @@ public class HandleCodeLines {
                     "|" + BOOLEAN_PATTERN_ASSIGN +"|" + CHAR_PATTERN_ASSIGN );
     private final Matcher VARIABLE_MATCHER_ASSIGN = VARIABLE_PATTERN_ASSIGN.matcher("");
     private int currScopeLevel = 0;
+    // name: type: final: initialized
     private HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> globalSymbolStable = new HashMap<>();
+
+    // name: type: final: initialized
     private HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> localSymbolStable = new HashMap<>();
-    private boolean startedFunctions = false;
-    private String[] legalTypes = new String[] {"int", "double", "String", "boolean", "char"};
     private HashMap<String, ArrayList<Map.Entry<Map.Entry<String, Boolean>, String>>> functionSymbols = new HashMap<>();
     private final HashSet<String> typesAndFinal = new HashSet<>(Arrays.asList("int", "double", "String", "char",
             "boolean", "final"));
@@ -85,6 +80,12 @@ public class HandleCodeLines {
             + NAME_REGEX + "\\s*(,\\s*" + VARIABLE_PATTERN + "|" + NAME_REGEX + "\\s*)*)?\\)\\s*";
     private final Pattern FUNCTION_CALL_PATTERN = Pattern.compile(FUNCTION_CALL_REGEX);
     private final Matcher FUNCTION_CALL_MATCHER = FUNCTION_CALL_PATTERN.matcher("");
+
+    private final String RETURN_REGEX = "return\\s*;";
+    private final Pattern RETURN_PATTERN = Pattern.compile(RETURN_REGEX);
+    private final Matcher RETURN_MATCHER = RETURN_PATTERN.matcher("");
+
+    private boolean isReturn = false;
 
     // errors
     private final String FUNCTION_DECLARATION_ERROR = "The function declaration is illegal!";
@@ -119,11 +120,15 @@ public class HandleCodeLines {
 
     private void handleLine(String line) throws TypeOneException {
 
+        line = line.trim();
+        if(line.startsWith("/*")) {
+            throw new CommentException("Comment format is illegal!");
+        }
+
         if (COMMENT_START_MATCHER.reset(line).find()) {
             throw new CommentException("Comment format is illegal!");
         }
 
-        line = line.trim();
         if (line.startsWith("\\\\")) {
             return;
         }
@@ -134,6 +139,11 @@ public class HandleCodeLines {
 
         if(currScopeLevel > 0) {
             try {
+                RETURN_MATCHER.reset(line);
+                if(currScopeLevel == 1 && RETURN_MATCHER.matches()) {
+                    isReturn = true;
+                    return;
+                }
                 handleFunction(line);
             }
             catch(TypeOneException e) {
@@ -163,6 +173,13 @@ public class HandleCodeLines {
 
     private void handleFunction(String line) throws TypeOneException {
 
+        RETURN_MATCHER.reset(line);
+        if(RETURN_MATCHER.matches()) {
+            if(currScopeLevel == 0) {
+                throw new ReturnException("Can't return from a global scope!");
+            }
+        }
+
         if (line.startsWith("void")) {
             if(currScopeLevel > 0) {
                 throw new NestedFunctionException("Can't create nested function!");
@@ -173,15 +190,17 @@ public class HandleCodeLines {
             currentFunction =
                     functionSymbols.get(line.split(" ")[1].split("\\(")[0]);
             for(Map.Entry<Map.Entry<String, Boolean>, String> functionSymbol: currentFunction) {
-                localSymbolStable.put(functionSymbol.getValue(), Map.entry(functionSymbol.getKey().getKey(),
+                localSymbolStable.put(functionSymbol.getValue() + "_1", Map.entry(functionSymbol.getKey().getKey(),
                         Map.entry(functionSymbol.getKey().getValue(), true)));
             }
             return;
         }
 
         if(line.equals("}")) {
+            if(currScopeLevel == 1 && !isReturn) {
+                throw new ReturnException("Must return before ending the method!");
+            }
             currScopeLevel--;
-
         }
 
         if(line.contains("if")) {
@@ -236,30 +255,50 @@ public class HandleCodeLines {
         ArrayList<String> types = new ArrayList<>();
         for (String parameter : parameters) {
             parameter = parameter.trim(); // Clean up spaces
-            if (!parameter.isEmpty()) {   // Ensure parameter is not empty
-                if(localSymbolStable.containsKey(parameter)) {
-                    if(!localSymbolStable.get(parameter).getValue().getValue()) {
-                        if(globalSymbolStable.containsKey(parameter)) {
-                            if(!globalSymbolStable.get(parameter).getValue().getValue()) {
-                                throw new FunctionCallException("Argument not initialized!");
-                            }
-                            else {
-                                types.add(globalSymbolStable.get(parameter).getKey());
-                            }
+            if (parameter.isEmpty()){
+                continue;
+
+            }
+            boolean isFound = false;
+            for(int i = currScopeLevel; i > -1; i--) {
+                if(i == 0) {
+                    if(globalSymbolStable.containsKey(parameter)) {
+
+                        if (!globalSymbolStable.get(parameter).getValue().getValue()) {
+                            throw new FunctionCallException("Argument not initialized!");
+                        } else {
+                            types.add(globalSymbolStable.get(parameter).getKey());
+                            isFound = true;
                         }
-                    }
-                    else {
-                        types.add(localSymbolStable.get(parameter).getKey());
+                        break;
                     }
                 }
 
-                else {
-                    String type = findType(parameter);
-                    if(type != null) {
-                        types.add(type);
+                else if(localSymbolStable.containsKey(parameter + "_" + i)) {
+                    parameter = parameter + "_" + i;
+                    if (!localSymbolStable.get(parameter).getValue().getValue()) {
+                        throw new FunctionCallException("Argument not initialized!");
+                    } else {
+                        types.add(localSymbolStable.get(parameter).getKey());
+                        isFound = true;
                     }
+                    break;
                 }
+
             }
+
+            if(!isFound) {
+                String type = findType(parameter);
+                if(type != null) {
+                    types.add(type);
+                }
+                else{
+                    throw new FunctionCallException("Argument not valid!");
+                }
+
+            }
+
+
         }
 
         if(types.size() != functionSymbols.get(name).size()) {
@@ -434,7 +473,7 @@ public class HandleCodeLines {
 
                 // Split by '=' after removing unnecessary spaces around it
                 String[] parts = myArray[i].split("\\s*=\\s*");
-                name = parts[0].substring(parts[0].lastIndexOf(' ') + 1);
+                name = parts[0].substring(parts[0].lastIndexOf(' ') + 1) + "_" + currScopeLevel;
                 type = "";
 
                 if (line.contains("\bint\b")) {
@@ -517,7 +556,7 @@ public class HandleCodeLines {
                 String[] words = myArray[i].split(" ");
 
                 // Get the name (last word) and type (second-to-last word)
-                name = words[words.length - 1]; // Last word
+                name = words[words.length - 1] + "_" + currScopeLevel; // Last word
                 type = words[words.length - 2]; // Second-to-last word
 
                 if (currScopeLevel >= 2) {
