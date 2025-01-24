@@ -57,7 +57,7 @@ public class HandleFunction {
                     ")?" +                               // end optional group for arguments
                     "\\)\\s*;";                          // closing parenthesis and semicolon
     private static final Pattern FUNCTION_CALL_PATTERN = Pattern.compile(FUNCTION_CALL_REGEX);
-    private static final Matcher FUNCTION_CALL_MATCHER = FUNCTION_CALL_PATTERN.matcher("");
+    public static final Matcher FUNCTION_CALL_MATCHER = FUNCTION_CALL_PATTERN.matcher("");
 
     /*
      * Error messages for function-related issues.
