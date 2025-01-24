@@ -20,13 +20,12 @@ public class HandleFunction {
     /*
      * Regular expression pattern for detecting function declarations.
      */
-    private static final String PATTERN_TYPE = "(int|double|String|boolean|char)";
-
-    private static final String FUNCTION_NAME_REGEX = "void\\s+[a-zA-Z](_?[a-zA-Z0-9])*_?\\s*\\(\\s*(\\s*(final\\s+)?" +
+    private final String PATTERN_TYPE = "(int|double|String|boolean|char)";
+    private final String FUNCTION_NAME_REGEX = "void\\s+[a-zA-Z](_?[a-zA-Z0-9])*_?\\s*\\(\\s*(\\s*(final\\s+)?" +
             PATTERN_TYPE + "\\s+" + HandleCodeLines.NAME_REGEX +
             "\\s*(,\\s*(final\\s+)?" + PATTERN_TYPE + "\\s+" + HandleCodeLines.NAME_REGEX + ")*)?\\)\\s*";
-    private static final Pattern FUNCTION_NAME_PATTERN = Pattern.compile(FUNCTION_NAME_REGEX + "\\{");
-    private static final Matcher FUNCTION_NAME_MATCHER = FUNCTION_NAME_PATTERN.matcher("");
+    private final Pattern FUNCTION_NAME_PATTERN = Pattern.compile(FUNCTION_NAME_REGEX + "\\{");
+    private final Matcher FUNCTION_NAME_MATCHER = FUNCTION_NAME_PATTERN.matcher("");
 
     /*
      * Regular expression pattern for detecting function calls.
@@ -62,27 +61,46 @@ public class HandleFunction {
     /*
      * Error messages for function-related issues.
      */
-
-    private static final String RETURN_FROM_GLOBAL_SCOPE_ERROR = "Can't return from a global scope!";
-    private static final String NESTED_FUNCTION_ERROR = "Can't create nested function!";
-    private static final String FUNCTION_DECLARATION_ERROR = "Not a valid function declaration!";
-    private static final String FUNCTION_CALL_ERROR = "Not a valid function call!";
-    private static final String FUNCTIONS_WITH_SAME_NAME_ERROR = "Can't declare two functions with the same name!";
-    private static final String ARGUMENT_NOT_INITIALIZED_ERROR = "Can't call a function with uninitialized argument!";
-    private static final String INVALID_ARGUMENT_ERROR = "Invalid argument was passed to the function!";
-    private static final String WRONG_NUM_OF_ARGUMENTS_ERROR = "Wrong number of arguments foe the function!";
-    private static final String ARGUMENT_TYPE_ERROR = "The type of the argument is incorrect!";
+    private final String RETURN_FROM_GLOBAL_SCOPE_ERROR = "Can't return from a global scope!";
+    private final String NESTED_FUNCTION_ERROR = "Can't create nested function!";
+    private final String FUNCTION_DECLARATION_ERROR = "Not a valid function declaration!";
+    private final String FUNCTION_CALL_ERROR = "Not a valid function call!";
+    private final String FUNCTIONS_WITH_SAME_NAME_ERROR = "Can't declare two functions with the same name!";
+    private final String ARGUMENT_NOT_INITIALIZED_ERROR = "Can't call a function with uninitialized argument!";
+    private final String INVALID_ARGUMENT_ERROR = "Invalid argument was passed to the function!";
+    private final String WRONG_NUM_OF_ARGUMENTS_ERROR = "Wrong number of arguments foe the function!";
+    private final String ARGUMENT_TYPE_ERROR = "The type of the argument is incorrect!";
+    private final String NOT_RETURNING_ERROR = "Must return before ending the method!";
+    private final String FUNCTION_DOESNT_EXIST_ERROR = "The function doesn't exist!";
 
     /*
      * Constants used for function handling.
      */
-    private static final String OPENING_PARENTHESES_REGEX = "\\(";
-    private static final String UNDER_SCORE = "_";
-    private static final String COMMA = ",";
-    private static final String VOID = "void";
-    private static final String FINAL = "final";
-    private static final char OPENING_PARENTHESES = '(';
-    private static final char CLOSING_PARENTHESES = ')';
+    private final String OPENING_PARENTHESES_REGEX = "\\(";
+    private final String UNDER_SCORE = "_";
+    private final char UNDER_SCORE_CHAR = '_';
+    private final String COMMA = ",";
+    private final String SPACE = " ";
+    private final String VOID = "void";
+    private final String FINAL = "final";
+    private final String IF = "if";
+    private final String WHILE = "while";
+    private final char OPENING_PARENTHESES = '(';
+    private final char CLOSING_PARENTHESES = ')';
+    private final String OPENING_PARENTHESES_STR = "(";
+    private final String CLOSING_PARENTHESES_STR = ")";
+    private final String CLOSING_BRACKETS = "}";
+    private final String FIRST_SCOPE = "_1";
+
+    private final HandleIf ifHandler;
+    private final HandleWhile whileHandler;
+    private final HandleVariables variablesHandler;
+
+    public HandleFunction() {
+        ifHandler = new HandleIf();
+        whileHandler = new HandleWhile();
+        variablesHandler = new HandleVariables();
+    }
 
     /**
      * Processes a given line of code and determines if it is a function declaration,
@@ -91,9 +109,7 @@ public class HandleFunction {
      * @param line The line of code to process.
      * @throws TypeOneException If a function-related syntax error is encountered.
      */
-
-
-    public static void handleFunction(String line) throws TypeOneException {
+    public void handleFunction(String line) throws TypeOneException {
         HandleCodeLines.RETURN_MATCHER.reset(line);
         if (HandleCodeLines.RETURN_MATCHER.matches()) {
             if (HandleCodeLines.currScopeLevel == 0) {
@@ -101,7 +117,6 @@ public class HandleFunction {
             }
             return;
         }
-
         if (line.startsWith(VOID)) {
             if (HandleCodeLines.currScopeLevel > 0) {
                 throw new NestedFunctionException(NESTED_FUNCTION_ERROR);
@@ -110,52 +125,49 @@ public class HandleFunction {
             HandleCodeLines.localSymbolsTable = new HashMap<>();
             ArrayList<Map.Entry<Map.Entry<String, Boolean>, String>> currentFunction;
             currentFunction =
-                    HandleCodeLines.functionSymbols.get(line.split(" ")[1].split("\\(")[0]);
+                    HandleCodeLines.functionSymbols.get(line.split(SPACE)[1].split(OPENING_PARENTHESES_REGEX)[0]);
             if (!(currentFunction == null)) {
                 for (Map.Entry<Map.Entry<String, Boolean>, String> functionSymbol : currentFunction) {
-                    HandleCodeLines.localSymbolsTable.put(functionSymbol.getValue() + "_1", Map.entry(functionSymbol.getKey().getKey(),
+                    HandleCodeLines.localSymbolsTable.put(functionSymbol.getValue() +
+                            FIRST_SCOPE, Map.entry(functionSymbol.getKey().getKey(),
                             Map.entry(functionSymbol.getKey().getValue(), true)));
                 }
             }
             return;
         }
 
-        if (line.equals("}")) {
+        if (line.equals(CLOSING_BRACKETS)) {
             if (HandleCodeLines.currScopeLevel == 1 && !HandleCodeLines.isReturn) {
-                throw new ReturnException("Must return before ending the method!");
+                throw new ReturnException(NOT_RETURNING_ERROR);
             }
             Iterator<String> iterator = HandleCodeLines.localSymbolsTable.keySet().iterator();
             while (iterator.hasNext()) {
                 String var = iterator.next();
-                String lastPart = var.substring(var.lastIndexOf('_') + 1);
+                String lastPart = var.substring(var.lastIndexOf(UNDER_SCORE_CHAR) + 1);
                 int value = Integer.parseInt(lastPart);
                 if (value == HandleCodeLines.currScopeLevel) {
                     iterator.remove();  // Safe removal using iterator
                 }
             }
-
             HandleCodeLines.currScopeLevel--;
             return;
         }
-
-        if (line.startsWith("if")) {
+        if (line.startsWith(IF)) {
             try {
-                HandleIf.handleIfStatement(line);
+                ifHandler.handleIfStatement(line);
                 return;
             } catch (IfException e) {
                 throw e;
             }
         }
-
-        if (line.startsWith("while")) {
+        if (line.startsWith(WHILE)) {
             try {
-                HandleWhile.handleWhileStatement(line);
+                whileHandler.handleWhileStatement(line);
             } catch (WhileException e) {
                 throw e;
             }
-
         } else {
-            if (line.contains("(") && line.contains(")")) {
+            if (line.contains(OPENING_PARENTHESES_STR) && line.contains(CLOSING_PARENTHESES_STR)) {
                 try {
                     handleFunctionCall(line);
                 } catch (FunctionCallException exception) {
@@ -163,7 +175,7 @@ public class HandleFunction {
                 }
             } else {
                 try {
-                    HandleVariables.defineAssignVariable(line);
+                    variablesHandler.defineAssignVariable(line);
                 } catch (VariablesException e) {
                     throw e;
                 }
@@ -179,9 +191,7 @@ public class HandleFunction {
      * @param line The function declaration statement.
      * @throws FunctionDeclarationException If the function declaration is invalid.
      */
-
-
-    public static void handleFunctionDeclaration(String line) throws FunctionDeclarationException {
+    public void handleFunctionDeclaration(String line) throws FunctionDeclarationException {
         FUNCTION_NAME_MATCHER.reset(line);
         if(!FUNCTION_NAME_MATCHER.matches()) {
             throw new FunctionDeclarationException(FUNCTION_DECLARATION_ERROR);
@@ -220,8 +230,7 @@ public class HandleFunction {
         HandleCodeLines.functionSymbols.put(name, innerArray);
     }
 
-    private static boolean checkTypes(String funcType, String callType){
-
+    private boolean checkTypes(String funcType, String callType){
         if (!(callType.equals(funcType))) {
             if (funcType.equals("double")) {
                 if (!callType.equals("int")) {
@@ -237,7 +246,6 @@ public class HandleFunction {
             }
         }
         return true;
-
     }
 
     /**
@@ -247,14 +255,11 @@ public class HandleFunction {
      * @param line The function call statement.
      * @throws FunctionCallException If the function call is invalid.
      */
-
-    public static void handleFunctionCall(String line) throws FunctionCallException {
+    public void handleFunctionCall(String line) throws FunctionCallException {
         FUNCTION_CALL_MATCHER.reset(line);
         if(!FUNCTION_CALL_MATCHER.matches()) {
-
             throw new FunctionCallException(FUNCTION_CALL_ERROR);
         }
-
         String name = line.split(OPENING_PARENTHESES_REGEX)[0].trim();
         String parameterPart = line.substring(line.indexOf(OPENING_PARENTHESES) + 1, line.indexOf(CLOSING_PARENTHESES));
         String[] parameters = parameterPart.split(COMMA);
@@ -263,7 +268,6 @@ public class HandleFunction {
             parameter = parameter.trim(); // Clean up spaces
             if (parameter.isEmpty()){
                 continue;
-
             }
             boolean isFound = false;
             for(int i = HandleCodeLines.currScopeLevel; i > -1; i--) {
@@ -279,7 +283,6 @@ public class HandleFunction {
                         break;
                     }
                 }
-
                 else if(HandleCodeLines.localSymbolsTable.containsKey(parameter + UNDER_SCORE + i)) {
                     parameter = parameter + UNDER_SCORE + i;
                     if (!HandleCodeLines.localSymbolsTable.get(parameter).getValue().getValue()) {
@@ -290,9 +293,7 @@ public class HandleFunction {
                     }
                     break;
                 }
-
             }
-
             if(!isFound) {
                 String type = HandleCodeLines.findType(parameter);
                 if(type != null) {
@@ -301,19 +302,14 @@ public class HandleFunction {
                 else{
                     throw new FunctionCallException(INVALID_ARGUMENT_ERROR);
                 }
-
             }
-
-
         }
-
         if (!HandleCodeLines.functionSymbols.containsKey(name)) {
-            throw new FunctionCallException("calling an inexistent function");
+            throw new FunctionCallException(FUNCTION_DOESNT_EXIST_ERROR);
         }
         if(types.size() != HandleCodeLines.functionSymbols.get(name).size()) {
             throw new FunctionCallException(WRONG_NUM_OF_ARGUMENTS_ERROR);
         }
-
         int counter = 0;
         for(String type : types) {
             if(!checkTypes( HandleCodeLines.functionSymbols.get(name).get(counter).getKey().getKey(),type)) {

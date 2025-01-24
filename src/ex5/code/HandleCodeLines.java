@@ -19,12 +19,11 @@ public class HandleCodeLines {
      */
     private ArrayList<String> codeLines;
 
-
     /*
      * Regular expression pattern for detecting comments.
      */
-    private static final Pattern COMMENT_START = Pattern.compile("^.+//");
-    private static final Matcher COMMENT_START_MATCHER = COMMENT_START.matcher("");
+    private final Pattern COMMENT_START = Pattern.compile("^.+//");
+    private final Matcher COMMENT_START_MATCHER = COMMENT_START.matcher("");
 
     /**
      * Regular expressions and patterns for variable names, integers, and doubles.
@@ -71,11 +70,7 @@ public class HandleCodeLines {
     /*
      * Data type constants.
      */
-
-    /*
-     * Data type constants.
-     */
-    private final String VOID = "void";
+    private static final String VOID = "void";
     private static final String INT = "int";
     private static final String DOUBLE = "double";
     private static final String STRING = "String";
@@ -93,25 +88,25 @@ public class HandleCodeLines {
     /*
      * Comment syntax definitions.
      */
-    private static final String LEGAL_COMMENT_START = "//";
-    private static final String ILLEGAL_COMMENT_START = "/*";
-    private static final String SPACE_REGEX = "\\s+";
+    private final String LEGAL_COMMENT_START = "//";
+    private final String ILLEGAL_COMMENT_START = "/*";
+    private final String SPACE_REGEX = "\\s+";
 
     /*
      * End of line characters.
      */
-
-    private static final String SEMICOLON = ";";
-    private static final String OPENING_BRACKET = "{";
-    private static final String CLOSING_BRACKET = "}";
-
-
+    private final String SEMICOLON = ";";
+    private final String OPENING_BRACKET = "{";
+    private final String CLOSING_BRACKET = "}";
 
     /*
      * Error message for invalid comment formats.
      */
     private final String COMMENT_ERROR = "The comment format is illegal!";
     private final String END_OF_LINE_ERROR = "End of line error!";
+
+    private final HandleVariables variablesHandler;
+    private final HandleFunction functionHandler;
 
     /**
      * Constructs a new HandleCodeLines instance with the provided lines of code.
@@ -120,6 +115,8 @@ public class HandleCodeLines {
      */
     public HandleCodeLines(ArrayList<String> codeLines) {
         this.codeLines = codeLines;
+        variablesHandler = new HandleVariables();
+        functionHandler = new HandleFunction();
     }
 
     /**
@@ -134,7 +131,7 @@ public class HandleCodeLines {
             codeLine = codeLine.replaceAll(SPACE_REGEX, " ");
             if(codeLine.startsWith(VOID)) {
                 try {
-                    HandleFunction.handleFunctionDeclaration(codeLine);
+                    functionHandler.handleFunctionDeclaration(codeLine);
                 }
                 catch(FunctionDeclarationException e) {
                     throw e;
@@ -190,7 +187,7 @@ public class HandleCodeLines {
                     isReturn = true;
                     return;
                 }
-                HandleFunction.handleFunction(line);
+                functionHandler.handleFunction(line);
             }
             catch(TypeOneException e) {
                 throw e;
@@ -200,7 +197,7 @@ public class HandleCodeLines {
         else if (currScopeLevel == 0) {
             if (line.startsWith(VOID)){
                 try {
-                    HandleFunction.handleFunction(line);
+                    functionHandler.handleFunction(line);
                 }
                 catch(TypeOneException e) {
                     throw e;
@@ -208,7 +205,7 @@ public class HandleCodeLines {
             }
             else {
                 try {
-                    HandleVariables.defineAssignVariable(line);
+                    variablesHandler.defineAssignVariable(line);
                 }
                 catch(VariablesException e) {
                     throw e;

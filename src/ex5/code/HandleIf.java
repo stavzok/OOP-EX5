@@ -17,7 +17,7 @@ public class HandleIf {
     /*
      * Regular expression pattern for validating if conditions.
      */
-    private static final String IF_CONDITION_CONSTANT =
+    private final String IF_CONDITION_CONSTANT =
             "if\\s*\\(\\s*" +                    // if followed by opening parenthesis
                     "(true|false|" +                     // condition
                     HandleCodeLines.INT_REGEX + "|" +
@@ -34,28 +34,28 @@ public class HandleIf {
     /*
      * Compiled pattern and matcher for matching if conditions.
      */
-    private static final Pattern IF_CONDITION_PATTERN = Pattern.compile(IF_CONDITION_CONSTANT);
-    private static final Matcher IF_CONDITION_MATCHER = IF_CONDITION_PATTERN.matcher("");
+    private final Pattern IF_CONDITION_PATTERN = Pattern.compile(IF_CONDITION_CONSTANT);
+    private final Matcher IF_CONDITION_MATCHER = IF_CONDITION_PATTERN.matcher("");
 
     /*
      * Set of valid types that can be used in if conditions.
      */
-    private static final HashSet<String> validTypes = new HashSet<>(Arrays.asList("int", "double", "boolean"));
+    private final HashSet<String> validTypes = new HashSet<>(Arrays.asList("int", "double", "boolean"));
 
     /*
      * Error message for invalid if condition components.
      */
-    private static final String IF_CONDITION_COMPONENTS_ERROR = "The if condition components are invalid!";
+    private final String IF_CONDITION_COMPONENTS_ERROR = "The if condition components are invalid!";
 
     /*
      * Underscore constant for variable name handling in different scopes.
      */
-    private static final String UNDER_SCORE = "_";
+    private final String UNDER_SCORE = "_";
 
     /*
      * Error message for incorrect if statement structure.
      */
-    private static final String IF_STRUCTURE_ERROR = "The if statement structure is invalid!";
+    private final String IF_STRUCTURE_ERROR = "The if statement structure is invalid!";
 
     /**
      * Validates and processes a given if statement.
@@ -66,7 +66,7 @@ public class HandleIf {
      * @throws IfException If the if condition is improperly structured or contains invalid components.
      */
 
-    public static void handleIfStatement(String line) throws IfException {
+    public void handleIfStatement(String line) throws IfException {
         IF_CONDITION_MATCHER.reset(line);
         if (IF_CONDITION_MATCHER.matches()) {
             HandleCodeLines.currScopeLevel++;
@@ -89,7 +89,6 @@ public class HandleIf {
                         }
                     }
                     // local symbol table
-
                     else if(HandleCodeLines.localSymbolsTable.containsKey(foundName + UNDER_SCORE + i)) {
                         foundName = foundName + UNDER_SCORE + i;
                         if (!HandleCodeLines.localSymbolsTable.get(foundName).getValue().getValue()

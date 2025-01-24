@@ -18,7 +18,7 @@ public class HandleWhile {
      * Regular expression pattern for validating while conditions.
      */
 
-    private static final String WHILE_CONDITION_CONSTANT =
+    private final String WHILE_CONDITION_CONSTANT =
             "while\\s*\\(\\s*" +                 // while followed by opening parenthesis
                     "(true|false|" +                     // condition
                     HandleCodeLines.INT_REGEX + "|" +
@@ -35,28 +35,28 @@ public class HandleWhile {
     /*
      * Compiled pattern and matcher for matching while conditions.
      */
-    private static final Pattern WHILE_CONDITION_PATTERN = Pattern.compile(WHILE_CONDITION_CONSTANT);
-    private static final Matcher WHILE_CONDITION_MATCHER = WHILE_CONDITION_PATTERN.matcher("");
+    private final Pattern WHILE_CONDITION_PATTERN = Pattern.compile(WHILE_CONDITION_CONSTANT);
+    private final Matcher WHILE_CONDITION_MATCHER = WHILE_CONDITION_PATTERN.matcher("");
 
     /*
      * Set of valid types that can be used in while conditions.
      */
-    private static final HashSet<String> validTypes = new HashSet<>(Arrays.asList("int", "double", "boolean"));
+    private final HashSet<String> validTypes = new HashSet<>(Arrays.asList("int", "double", "boolean"));
 
     /*
      * Error message for invalid while condition components.
      */
-    private static final String WHILE_CONDITION_COMPONENTS_ERROR = "The while statement components are invalid!";
+    private final String WHILE_CONDITION_COMPONENTS_ERROR = "The while statement components are invalid!";
 
     /*
      * Error message for incorrect while statement structure.
      */
-    private static final String WHILE_STRUCTURE_ERROR = "The while structure is illegal!";
+    private final String WHILE_STRUCTURE_ERROR = "The while structure is illegal!";
 
     /*
      * Underscore constant for variable name handling in different scopes.
      */
-    private static final String UNDER_SCORE = "_";
+    private final String UNDER_SCORE = "_";
 
 
     /**
@@ -67,8 +67,7 @@ public class HandleWhile {
      * @param line The while statement to validate.
      * @throws WhileException If the while condition is improperly structured or contains invalid components.
      */
-
-    public static void handleWhileStatement(String line) throws WhileException {
+    public void handleWhileStatement(String line) throws WhileException {
         WHILE_CONDITION_MATCHER.reset(line);
         if(WHILE_CONDITION_MATCHER.matches()) {
             HandleCodeLines.currScopeLevel++;

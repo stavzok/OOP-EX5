@@ -18,120 +18,118 @@ public class HandleVariables {
     /*
      * Regular expressions for detecting and validating different variable types and assignments.
      */
-    private static final String INT_PATTERN_ASSIGN =
+    private final String INT_PATTERN_ASSIGN =
             HandleCodeLines.NAME_REGEX + "(\\s*=\\s*([+-]?\\d+|" + HandleCodeLines.NAME_REGEX +
                     "))?(\\s*,\\s*" + HandleCodeLines.NAME_REGEX +
                     "(\\s*=\\s*([+-]?\\d+|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
-    private static final String DOUBLE_PATTERN_ASSIGN =
+    private final String DOUBLE_PATTERN_ASSIGN =
             HandleCodeLines.NAME_REGEX + "(\\s*=\\s*([+-]?(\\d+(\\.\\d*)?|\\.\\d+)|" +
                     HandleCodeLines.NAME_REGEX + "))?" +
                     "(\\s*,\\s*" + HandleCodeLines.NAME_REGEX +
                     "(\\s*=\\s*([+-]?(\\d+(\\.\\d*)?|\\.\\d+)|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
-    private static final String STRING_PATTERN_ASSIGN =  HandleCodeLines.NAME_REGEX +
+    private final String STRING_PATTERN_ASSIGN =  HandleCodeLines.NAME_REGEX +
             "(\\s*=\\s*(\".*\"|" + HandleCodeLines.NAME_REGEX + "))?(\\s*,\\s*"
             + HandleCodeLines.NAME_REGEX + "(\\s*=\\s*(\".*\"|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
-    private static final String BOOLEAN_PATTERN_ASSIGN = HandleCodeLines.NAME_REGEX +
+    private final String BOOLEAN_PATTERN_ASSIGN = HandleCodeLines.NAME_REGEX +
             "(\\s*=\\s*(true|false|" + HandleCodeLines.INT_REGEX +
             "|" + HandleCodeLines.DOUBLE_REGEX + "|" + HandleCodeLines.NAME_REGEX + "))?(\\s*,\\s*"
             + HandleCodeLines.NAME_REGEX + "(\\s*=\\s*(true|false|" + HandleCodeLines.INT_REGEX +
             "|" + HandleCodeLines.DOUBLE_REGEX + "|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
-    private static final String CHAR_PATTERN_ASSIGN = HandleCodeLines.NAME_REGEX +
+    private final String CHAR_PATTERN_ASSIGN = HandleCodeLines.NAME_REGEX +
             "(\\s*=\\s*(\'.\'|" + HandleCodeLines.NAME_REGEX + "))?(\\s*,\\s*"
             + HandleCodeLines.NAME_REGEX + "(\\s*=\\s*(\'.\'|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
     /*
      * Pattern for validating variable of different types.
      */
-    private static final Pattern VARIABLE_PATTERN_ASSIGN =
+    private final Pattern VARIABLE_PATTERN_ASSIGN =
             Pattern.compile(INT_PATTERN_ASSIGN + "|" + DOUBLE_PATTERN_ASSIGN +"|" + STRING_PATTERN_ASSIGN +
                     "|" + BOOLEAN_PATTERN_ASSIGN +"|" + CHAR_PATTERN_ASSIGN );
 
-    private static final Matcher VARIABLE_MATCHER_ASSIGN = VARIABLE_PATTERN_ASSIGN.matcher("");
+    private final Matcher VARIABLE_MATCHER_ASSIGN = VARIABLE_PATTERN_ASSIGN.matcher("");
 
-    private static final String INT_PATTERN =
+    private final String INT_PATTERN =
             "(final\\s+)?int\\s+"+ HandleCodeLines.NAME_REGEX + "(\\s*=\\s*([+-]?\\d+|" +
                     HandleCodeLines.NAME_REGEX + "))?(\\s*,\\s*" + HandleCodeLines.NAME_REGEX +
                     "(\\s*=\\s*([+-]?\\d+|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
-    private static final String DOUBLE_PATTERN =
+    private final String DOUBLE_PATTERN =
             "(final\\s+)?double\\s+" + HandleCodeLines.NAME_REGEX + "(\\s*=\\s*([+-]?(\\d+(\\.\\d*)?|\\.\\d+)|"
                     + HandleCodeLines.NAME_REGEX + "))?" +
                     "(\\s*,\\s*" + HandleCodeLines.NAME_REGEX +
                     "(\\s*=\\s*([+-]?(\\d+(\\.\\d*)?|\\.\\d+)|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
-    private final static String STRING_PATTERN =  "(final\\s+)?String\\s+"+ HandleCodeLines.NAME_REGEX + "(\\s*=\\s*(\".*\"|"
+    private String STRING_PATTERN =  "(final\\s+)?String\\s+"+ HandleCodeLines.NAME_REGEX + "(\\s*=\\s*(\".*\"|"
             + HandleCodeLines.NAME_REGEX + "))?(\\s*,\\s*"
             + HandleCodeLines.NAME_REGEX + "(\\s*=\\s*(\".*\"|" +
             HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
-    private final static String BOOLEAN_PATTERN = "(final\\s+)?boolean\\s+"+ HandleCodeLines.NAME_REGEX +
+    private String BOOLEAN_PATTERN = "(final\\s+)?boolean\\s+"+ HandleCodeLines.NAME_REGEX +
             "(\\s*=\\s*(true|false|" + HandleCodeLines.INT_REGEX +
             "|" + HandleCodeLines.DOUBLE_REGEX + "|" + HandleCodeLines.NAME_REGEX + "))?(\\s*,\\s*"
             + HandleCodeLines.NAME_REGEX + "(\\s*=\\s*(true|false|" + HandleCodeLines.INT_REGEX +
             "|" + HandleCodeLines.DOUBLE_REGEX + "|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
-    private static final String CHAR_PATTERN = "(final\\s+)?char\\s+"+ HandleCodeLines.NAME_REGEX +
+    private final String CHAR_PATTERN = "(final\\s+)?char\\s+"+ HandleCodeLines.NAME_REGEX +
             "(\\s*=\\s*('.'|" + HandleCodeLines.NAME_REGEX + "))?(\\s*,\\s*"
             + HandleCodeLines.NAME_REGEX + "(\\s*=\\s*('.'|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
-
-
-    public static final Pattern VARIABLE_PATTERN =
+    public final Pattern VARIABLE_PATTERN =
             Pattern.compile(INT_PATTERN + "|" + DOUBLE_PATTERN +"|" + STRING_PATTERN +
                     "|" + BOOLEAN_PATTERN +"|" + CHAR_PATTERN );
-    public static final Matcher VARIABLE_MATCHER = VARIABLE_PATTERN.matcher("");
+    public final Matcher VARIABLE_MATCHER = VARIABLE_PATTERN.matcher("");
 
     /*
      * Data types supported in the program and final.
      */
-    private static final HashSet<String> typesAndFinal = new HashSet<>(Arrays.asList("int", "double", "String", "char",
+    private final HashSet<String> typesAndFinal = new HashSet<>(Arrays.asList("int", "double", "String", "char",
             "boolean", "final"));
 
     /*
      * Error messages for variable-related issues.
      */
-    private static final String TYPE_ERROR = "The type is not recognized!";
-    private static final String TYPE_ASSIGNMENT_ERROR = "The assigned value is not in the right type!";
-    private static final String FINALE_INITIALIZATION_ERROR = "Final variable must be initialized!";
-    private static final String VARIABLE_EXISTS_ERROR = "Variable already exists!";
-    private static final String NOT_INITIALIZED_ERROR = "Argument not initialized!";
-    private static final String TYPE_OR_INITIALIZATION_ERROR = "Invalid type or uninitialized argument!";
-    private static final String VARIABLE_DOESNT_EXIST_ERROR = "Variable doesn't exist!";
-    private static final String FINAL_VARIABLE_CHANE_ERROR = "Can't assign into final variable";
-    private static final String INVALID_ASSIGN_ERROR = "Not a valid assignment expression!";
-    private static final String INVALID_DEFINE_ERROR = "Not a valid define expression!";
-    private static final String GLOBAL_CALL_FUNCTION_EXCEPTION = "Can't call a function from global scope!";
+    private final String TYPE_ERROR = "The type is not recognized!";
+    private final String TYPE_ASSIGNMENT_ERROR = "The assigned value is not in the right type!";
+    private final String FINALE_INITIALIZATION_ERROR = "Final variable must be initialized!";
+    private final String VARIABLE_EXISTS_ERROR = "Variable already exists!";
+    private final String NOT_INITIALIZED_ERROR = "Argument not initialized!";
+    private final String TYPE_OR_INITIALIZATION_ERROR = "Invalid type or uninitialized argument!";
+    private final String VARIABLE_DOESNT_EXIST_ERROR = "Variable doesn't exist!";
+    private final String FINAL_VARIABLE_CHANE_ERROR = "Can't assign into final variable";
+    private final String INVALID_ASSIGN_ERROR = "Not a valid assignment expression!";
+    private final String INVALID_DEFINE_ERROR = "Not a valid define expression!";
+    private final String GLOBAL_CALL_FUNCTION_EXCEPTION = "Can't call a function from global scope!";
 
     /*
      * Type names used in the program.
      */
-    private static final String DOUBLE = "double";
-    private static final String INT = "int";
-    private static final String BOOLEAN = "boolean";
-    private static final String FINAL = "final";
-    private static final String TRUE = "true";
-    private static final String FALSE = "false";
+    private final String DOUBLE = "double";
+    private final String INT = "int";
+    private final String BOOLEAN = "boolean";
+    private final String FINAL = "final";
+    private final String TRUE = "true";
+    private final String FALSE = "false";
 
     /*
      * Symbols used for parsing and validation.
      */
-    private static final String COMMA = ",";
-    private static final String EQUALS = "=";
-    private static final String UPPER_COMMA = "'";
-    private static final String SLASH_REGEX = "\"";
-    private static final String UNDER_SCORE = "_";
-    private static final String LINE_END = ";";
-    private static final String EQUALS_REGEX = "\\s*=\\s*";
-    private static final String EMPTY_STR = "";
-    private static final String SPACE = " ";
-    private static final char EMPTY_CHAR = ' ';
+    private final String COMMA = ",";
+    private final String EQUALS = "=";
+    private final String UPPER_COMMA = "'";
+    private final String SLASH_REGEX = "\"";
+    private final String UNDER_SCORE = "_";
+    private final String LINE_END = ";";
+    private final String EQUALS_REGEX = "\\s*=\\s*";
+    private final String EMPTY_STR = "";
+    private final String SPACE = " ";
+    private final char EMPTY_CHAR = ' ';
 
 
-    private static void handleLiterals(String type, String rightName) throws VariablesException{
+    private void handleLiterals(String type, String rightName) throws VariablesException{
         String typeRight;
         typeRight = HandleCodeLines.findType(rightName);
         if (typeRight == null) {
@@ -152,7 +150,7 @@ public class HandleVariables {
         
     }
 
-    private static boolean checkTypes(String type, String typeRight){
+    private boolean checkTypes(String type, String typeRight){
         if (!(typeRight.equals(type))) {
             if (type.equals(DOUBLE)) {
                 if (!typeRight.equals(INT)) {
@@ -170,7 +168,7 @@ public class HandleVariables {
         return true;
     }
     
-    private static void handleDefineLocalVariable(String line, String type) throws VariablesException{
+    private void handleDefineLocalVariable(String line, String type) throws VariablesException{
         boolean isInitialized;
         boolean isFinal;
         String[] myArray = line.split(COMMA);
@@ -238,7 +236,7 @@ public class HandleVariables {
         }
     }
 
-    private static void handleUnassignedLocalVariable(String arrayI, boolean isFinal,
+    private void handleUnassignedLocalVariable(String arrayI, boolean isFinal,
                                                       boolean isInitialized, String type) throws VariablesException{
         arrayI = arrayI.replace(LINE_END , EMPTY_STR).trim();
         // Extract the variable name from the declaration.
@@ -253,7 +251,7 @@ public class HandleVariables {
         HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
     }
 
-    private static boolean[] checkFinalAndInitialized(String arrayI, String array0) throws VariablesException {
+    private boolean[] checkFinalAndInitialized(String arrayI, String array0) throws VariablesException {
         boolean isInitialized = false;
         boolean isFinal = false;
         // Check if the variable is assigned a value at declaration
@@ -270,7 +268,7 @@ public class HandleVariables {
         return new boolean[]{isInitialized, isFinal};
     }
 
-    private static int iterateOverLocalSymbolTable(String type, String rightName) throws VariablesException {
+    private int iterateOverLocalSymbolTable(String type, String rightName) throws VariablesException {
         for (int j = HandleCodeLines.currScopeLevel; j > 0; j--) {
             if (HandleCodeLines.localSymbolsTable.containsKey(rightName + UNDER_SCORE + j)) {
                 rightName = rightName + UNDER_SCORE + j;
@@ -286,7 +284,7 @@ public class HandleVariables {
         return -1;
     }
 
-    private static int iterateOverLocalSymbolTableLeft( String rightName) throws VariablesException {
+    private int iterateOverLocalSymbolTableLeft( String rightName) throws VariablesException {
         for (int j = HandleCodeLines.currScopeLevel; j > 0; j--) {
             if (HandleCodeLines.localSymbolsTable.containsKey(rightName + UNDER_SCORE + j)) {
                 return j;
@@ -295,7 +293,7 @@ public class HandleVariables {
         return -1;
     }
 
-    private static void checkAssignedVariableValidity(String name, boolean isGlobal) throws VariablesException {
+    private void checkAssignedVariableValidity(String name, boolean isGlobal) throws VariablesException {
         HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> table;
         if (isGlobal) {
             table = HandleCodeLines.globalSymbolsTable;
@@ -309,7 +307,7 @@ public class HandleVariables {
         }
     }
 
-    private static void handleLeftLocal(String name, String rightName, boolean isGlobal) throws VariablesException {
+    private void handleLeftLocal(String name, String rightName, boolean isGlobal) throws VariablesException {
         HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> table;
 
         if (isGlobal) {
@@ -365,7 +363,7 @@ public class HandleVariables {
         }
     }
 
-    private static void handleAssignLocalVariable(String line) throws VariablesException {
+    private void handleAssignLocalVariable(String line) throws VariablesException {
         String[] myArray = line.split(COMMA);
         for (int i = 0; i < myArray.length; i++) {
             if (!(myArray[i].split(SLASH_REGEX)[0].contains(EQUALS) || myArray[i].split(UPPER_COMMA)[0].contains(EQUALS))) {
@@ -394,7 +392,7 @@ public class HandleVariables {
         }
     }
 
-    private static void handleDefineGlobalVariable(String line,String type) throws VariablesException {
+    private void handleDefineGlobalVariable(String line,String type) throws VariablesException {
         boolean isInitialized;
         boolean isFinal;
         String[] myArray = line.split(COMMA);
@@ -459,7 +457,7 @@ public class HandleVariables {
         }
     }
 
-    private static void handleAssignGlobalVariable(String line) throws VariablesException {
+    private void handleAssignGlobalVariable(String line) throws VariablesException {
         boolean isInitialized;
         boolean isFinal = false;
         String[] myArray = line.split(COMMA);
@@ -521,7 +519,7 @@ public class HandleVariables {
         }
     }
 
-    public static void defineAssignVariable(String line) throws TypeOneException, FunctionCallException {
+    public void defineAssignVariable(String line) throws TypeOneException, FunctionCallException {
         // check if global / local
         String type;
         boolean isGlobal = false;

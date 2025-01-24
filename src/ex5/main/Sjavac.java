@@ -18,7 +18,6 @@ import java.util.ArrayList;
  *
  * @author inbar.el and stavzok
  */
-
 public class Sjavac {
     /* Error messages for various input and file-related issues. */
     private static final String ARGUMENTS_NUM_ERROR = "Error: Invalid number of arguments. Expected 1 argument.";
