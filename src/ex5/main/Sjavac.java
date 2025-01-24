@@ -63,8 +63,14 @@ public class Sjavac {
             System.out.println(1);
             return;
         }
+        if (HandleCodeLines.currScopeLevel > 0){
+            System.err.println("A method isn't closed!");
+            System.out.println(1);
 
-        System.out.println(0);
+        }
+        else {
+            System.out.println(0);
+        }
     }
 
     /*

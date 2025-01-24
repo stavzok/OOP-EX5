@@ -28,7 +28,7 @@ public class HandleIf {
                     "(true|false|" +                     // optional second condition
                     HandleCodeLines.INT_REGEX + "|" +
                     HandleCodeLines.DOUBLE_REGEX + "|" +
-                    HandleCodeLines.NAME_REGEX + "))?" +
+                    HandleCodeLines.NAME_REGEX + "))*" +
                     "\\s*\\)\\s*\\{";// closing parenthesis and curly brace
 
     /*

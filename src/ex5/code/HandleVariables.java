@@ -176,6 +176,7 @@ public class HandleVariables {
                 return false;
             }
         }
+
         return true;
 
     }
@@ -245,7 +246,10 @@ public class HandleVariables {
                         && (!parts[1].equals("false"))) { //check right side - assigned variable (not literal)
                     // Look for the variable in the current and higher scope levels.
                     try {
-                        iterateOverLocalSymbolTable(type, origRightName);
+                        if(iterateOverLocalSymbolTable(type, origRightName) != -1){
+                            HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
+                        };
+
                     }
                     catch (VariablesException e){
                         throw e;
@@ -259,6 +263,7 @@ public class HandleVariables {
                                     !(checkTypes(type, typeRight))) {
                                 throw new VariablesException(TYPE_OR_INITIALIZATION_ERROR);
                             }
+
                             HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
                         }
                     }
@@ -304,6 +309,7 @@ public class HandleVariables {
             if (HandleCodeLines.localSymbolsTable.containsKey(rightName + UNDER_SCORE + j)) {
                 rightName = rightName + UNDER_SCORE + j;
                 String typeRight = HandleCodeLines.localSymbolsTable.get(rightName).getKey();
+
                 if (!HandleCodeLines.localSymbolsTable.get(rightName).getValue().getValue() ||
                         !(checkTypes(type, typeRight))) {
                     throw new VariablesException(NOT_INITIALIZED_ERROR);
@@ -357,18 +363,23 @@ public class HandleVariables {
         try {
             checkAssignedVariableValidity(name, isGlobal);
         }
+
         catch (VariablesException e) {
             throw e;
         }
 
+
         String type;
         type = table.get(name).getKey();
+        if (isGlobal){
+            name = name + UNDER_SCORE + iterateOverLocalSymbolTableLeft(name);
+        }
 
         if (rightName.matches(HandleCodeLines.NAME_REGEX) && (!rightName.equals("true"))
                 && (!rightName.equals("false"))) {
             try {
+
                 if (iterateOverLocalSymbolTable(type, rightName) != -1) {
-                    name = name + UNDER_SCORE + HandleCodeLines.currScopeLevel;
                     HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(false, true)));
                     return;
                 }
@@ -379,11 +390,12 @@ public class HandleVariables {
             }
             if (HandleCodeLines.globalSymbolsTable.containsKey(rightName)) {
                 String typeRight = HandleCodeLines.globalSymbolsTable.get(rightName).getKey();
+
                 if (!HandleCodeLines.globalSymbolsTable.get(rightName).getValue().getValue() ||
                         !(checkTypes(type, typeRight))) {
                     throw new VariablesException(TYPE_OR_INITIALIZATION_ERROR);
                 }
-                name = name + UNDER_SCORE + HandleCodeLines.currScopeLevel;
+
                 HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(false, true)));
             }
         }
@@ -393,7 +405,7 @@ public class HandleVariables {
             } catch (VariablesException e) {
                 throw e;
             }
-            name = name + UNDER_SCORE + HandleCodeLines.currScopeLevel;
+
             HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(false, true)));
         }
         // Update local symbol table with the new value
@@ -435,6 +447,7 @@ public class HandleVariables {
                 else if (HandleCodeLines.localSymbolsTable.containsKey(name + UNDER_SCORE +
                         iterateOverLocalSymbolTableLeft(name))) {
                     handleLeftLocal(name, parts[1], false);
+                    return;
                 } else {
                     throw new VariablesException(VARIABLE_DOESNT_EXIST_ERROR); //check if variable exists in the scope
                 }

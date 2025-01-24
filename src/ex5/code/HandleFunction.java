@@ -191,10 +191,10 @@ public class HandleFunction {
 
 
         // Extract the part of the line before the opening parenthesis
-        String name = line.substring(0, line.indexOf('(')).trim();
+        String name = line.substring(0, line.indexOf('('));
 
         // Split by spaces and get the last element before '('
-        name = name.split(" ")[1];
+        name = name.split(" ")[1].trim();
         if (HandleCodeLines.functionSymbols.containsKey(name)){
             throw new FunctionDeclarationException(FUNCTIONS_WITH_SAME_NAME_ERROR);
         }
@@ -220,6 +220,26 @@ public class HandleFunction {
         HandleCodeLines.functionSymbols.put(name, innerArray);
     }
 
+    private static boolean checkTypes(String funcType, String callType){
+
+        if (!(callType.equals(funcType))) {
+            if (funcType.equals("double")) {
+                if (!callType.equals("int")) {
+                    return false;
+                }
+            } else if (funcType.equals("boolean")) {
+                if (!callType.equals("double") && !callType.equals("int")) {
+                    return false;
+                }
+            }
+            else{
+                return false;
+            }
+        }
+        return true;
+
+    }
+
     /**
      * Validates and processes a function call.
      * Ensures that the function exists, has the correct number of arguments, and the correct argument types.
@@ -235,7 +255,7 @@ public class HandleFunction {
             throw new FunctionCallException(FUNCTION_CALL_ERROR);
         }
 
-        String name = line.split(OPENING_PARENTHESES_REGEX)[0];
+        String name = line.split(OPENING_PARENTHESES_REGEX)[0].trim();
         String parameterPart = line.substring(line.indexOf(OPENING_PARENTHESES) + 1, line.indexOf(CLOSING_PARENTHESES));
         String[] parameters = parameterPart.split(COMMA);
         ArrayList<String> types = new ArrayList<>();
@@ -287,14 +307,16 @@ public class HandleFunction {
 
         }
 
-
+        if (!HandleCodeLines.functionSymbols.containsKey(name)) {
+            throw new FunctionCallException("calling an inexistent function");
+        }
         if(types.size() != HandleCodeLines.functionSymbols.get(name).size()) {
             throw new FunctionCallException(WRONG_NUM_OF_ARGUMENTS_ERROR);
         }
 
         int counter = 0;
         for(String type : types) {
-            if(!type.equals(HandleCodeLines.functionSymbols.get(name).get(counter).getKey().getKey())) {
+            if(!checkTypes( HandleCodeLines.functionSymbols.get(name).get(counter).getKey().getKey(),type)) {
                 throw new FunctionCallException(ARGUMENT_TYPE_ERROR);
             }
             counter++;
