@@ -23,7 +23,7 @@ public class HandleCodeLines {
     /*
      * Regular expression pattern for detecting comments.
      */
-    private static final Pattern COMMENT_START = Pattern.compile("^.*\\\\");
+    private static final Pattern COMMENT_START = Pattern.compile("^.+//");
     private static final Matcher COMMENT_START_MATCHER = COMMENT_START.matcher("");
 
     /**
@@ -98,11 +98,20 @@ public class HandleCodeLines {
     private static final String SPACE_REGEX = "\\s+";
 
     /*
+     * End of line characters.
+     */
+
+    private static final String SEMICOLON = ";";
+    private static final String OPENING_BRACKET = "{";
+    private static final String CLOSING_BRACKET = "}";
+
+
+
+    /*
      * Error message for invalid comment formats.
      */
     private final String COMMENT_ERROR = "The comment format is illegal!";
-
-    private final String FUNCTION_DECLARATION_ERROR = "The function declaration is illegal!";
+    private final String END_OF_LINE_ERROR = "End of line error!";
 
     /**
      * Constructs a new HandleCodeLines instance with the provided lines of code.
@@ -124,7 +133,6 @@ public class HandleCodeLines {
         for(String codeLine: codeLines) {
             codeLine = codeLine.replaceAll(SPACE_REGEX, " ");
             if(codeLine.startsWith(VOID)) {
-                codeLine.trim();
                 try {
                     HandleFunction.handleFunctionDeclaration(codeLine);
                 }
@@ -154,6 +162,7 @@ public class HandleCodeLines {
 
     private void handleLine(String line) throws TypeOneException {
         if (COMMENT_START_MATCHER.reset(line).find()) {
+
             throw new CommentException(COMMENT_ERROR);
         }
 
@@ -169,6 +178,9 @@ public class HandleCodeLines {
 
         if(line.isEmpty()){
             return;
+        }
+        if (!(line.endsWith(SEMICOLON) || line.endsWith(OPENING_BRACKET) || line.endsWith(CLOSING_BRACKET))) {
+            throw new TypeOneException(END_OF_LINE_ERROR);
         }
 
         if(currScopeLevel > 0) {

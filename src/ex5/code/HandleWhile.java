@@ -84,7 +84,7 @@ public class HandleWhile {
                             // global symbol table
 
                             if (!HandleCodeLines.globalSymbolsTable.get(foundName).getValue().getValue()
-                                    || !validTypes.contains(HandleCodeLines.localSymbolsTable.get(foundName).getKey())) {
+                                    || !validTypes.contains(HandleCodeLines.globalSymbolsTable.get(foundName).getKey())) {
                                 throw new WhileException(WHILE_CONDITION_COMPONENTS_ERROR);
                             }
                             break;

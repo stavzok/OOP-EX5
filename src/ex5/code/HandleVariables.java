@@ -194,11 +194,9 @@ public class HandleVariables {
      */
     
     private static boolean handleDefineLocalVariable(String line, String type) throws VariablesException{
-        boolean isInitialized = false;
+        boolean isInitialized;
         boolean isFinal = false;
-
         String[] myArray = line.split(COMMA);
-
         for(int i = 0; i < myArray.length; i++){
             // Check if the variable is being initialized by searching for '=' in different contexts.
             isInitialized = false;
@@ -237,26 +235,20 @@ public class HandleVariables {
                 if (HandleCodeLines.localSymbolsTable.containsKey(name)){
                     throw new VariablesException(VARIABLE_EXISTS_ERROR); //check if variable exists in the scope
                 }
+
+
                 String origRightName = parts[1];
                 // Check if the right-hand side of the assignment is another variable.
+                int rightScope;
 
-                if(parts[1].matches(HandleCodeLines.NAME_REGEX)) { //check right side - assigned variable (not literal)
+                if(parts[1].matches(HandleCodeLines.NAME_REGEX) && (!parts[1].equals("true"))
+                        && (!parts[1].equals("false"))) { //check right side - assigned variable (not literal)
                     // Look for the variable in the current and higher scope levels.
-
-                    for (int j = HandleCodeLines.currScopeLevel; j > 0; j--) {
-                        if (HandleCodeLines.localSymbolsTable.containsKey(parts[1] + UNDER_SCORE + j)) {
-                            parts[1] = parts[1] + UNDER_SCORE + j;
-                            String typeRight = HandleCodeLines.localSymbolsTable.get(parts[1]).getKey();
-                            if (!HandleCodeLines.localSymbolsTable.get(parts[1]).getValue().getValue() ||
-                                    !(checkTypes(type, typeRight))) {
-                                throw new VariablesException(NOT_INITIALIZED_ERROR);
-                            }
-                            HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
-                            isFound = true;
-                            break;
-
-                        }
-
+                    try {
+                        iterateOverLocalSymbolTable(type, origRightName);
+                    }
+                    catch (VariablesException e){
+                        throw e;
                     }
                     // If the variable wasn't found locally, check the global symbol table.
 
@@ -307,6 +299,112 @@ public class HandleVariables {
         return true;
     }
 
+    private static int iterateOverLocalSymbolTable(String type, String rightName) throws VariablesException {
+        for (int j = HandleCodeLines.currScopeLevel; j > 0; j--) {
+            if (HandleCodeLines.localSymbolsTable.containsKey(rightName + UNDER_SCORE + j)) {
+                rightName = rightName + UNDER_SCORE + j;
+                String typeRight = HandleCodeLines.localSymbolsTable.get(rightName).getKey();
+                if (!HandleCodeLines.localSymbolsTable.get(rightName).getValue().getValue() ||
+                        !(checkTypes(type, typeRight))) {
+                    throw new VariablesException(NOT_INITIALIZED_ERROR);
+                }
+                return j;
+            }
+        }
+        return -1;
+    }
+
+    private static int iterateOverLocalSymbolTableLeft( String rightName) throws VariablesException {
+        for (int j = HandleCodeLines.currScopeLevel; j > 0; j--) {
+            if (HandleCodeLines.localSymbolsTable.containsKey(rightName + UNDER_SCORE + j)) {
+                return j;
+            }
+        }
+        return -1;
+    }
+
+
+
+    private static void checkAssignedVariableValidity(String name, boolean isGlobal) throws VariablesException {
+        HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> table;
+        if (isGlobal) {
+            table = HandleCodeLines.globalSymbolsTable;
+        }
+        else {
+            table = HandleCodeLines.localSymbolsTable;
+        }
+
+        if (table.get(name).getValue().getKey().equals(Boolean.TRUE)) {
+            throw new VariablesException(FINAL_VARIABLE_CHANE_ERROR);
+        }
+
+
+    }
+
+
+
+    private static void handleLeftLocal(String name, String rightName, boolean isGlobal) throws VariablesException {
+        HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> table;
+
+        if (isGlobal) {
+            table = HandleCodeLines.globalSymbolsTable;
+        }
+        else {
+            table = HandleCodeLines.localSymbolsTable;
+            name = name + UNDER_SCORE + iterateOverLocalSymbolTableLeft(name);
+        }
+
+        try {
+            checkAssignedVariableValidity(name, isGlobal);
+        }
+        catch (VariablesException e) {
+            throw e;
+        }
+
+        String type;
+        type = table.get(name).getKey();
+
+        if (rightName.matches(HandleCodeLines.NAME_REGEX) && (!rightName.equals("true"))
+                && (!rightName.equals("false"))) {
+            try {
+                if (iterateOverLocalSymbolTable(type, rightName) != -1) {
+                    name = name + UNDER_SCORE + HandleCodeLines.currScopeLevel;
+                    HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(false, true)));
+                    return;
+                }
+
+            }
+            catch (VariablesException e) {
+                throw e;
+            }
+            if (HandleCodeLines.globalSymbolsTable.containsKey(rightName)) {
+                String typeRight = HandleCodeLines.globalSymbolsTable.get(rightName).getKey();
+                if (!HandleCodeLines.globalSymbolsTable.get(rightName).getValue().getValue() ||
+                        !(checkTypes(type, typeRight))) {
+                    throw new VariablesException(TYPE_OR_INITIALIZATION_ERROR);
+                }
+                name = name + UNDER_SCORE + HandleCodeLines.currScopeLevel;
+                HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(false, true)));
+            }
+        }
+        else {
+            try {
+                handleLiterals(type, rightName);
+            } catch (VariablesException e) {
+                throw e;
+            }
+            name = name + UNDER_SCORE + HandleCodeLines.currScopeLevel;
+            HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(false, true)));
+        }
+        // Update local symbol table with the new value
+
+    }
+
+
+
+
+
+
 
     /*
      * Assigns a value to an existing local variable while ensuring
@@ -316,85 +414,35 @@ public class HandleVariables {
      * @return true if the assignment is valid.
      * @throws VariablesException If assignment violates scope, finality, or type constraints.
      */
-    private static boolean handleAssignLocalVariable(String line) throws VariablesException {
-        boolean isFinal = false;
-        boolean isInitialized;
+    private static void handleAssignLocalVariable(String line) throws VariablesException {
+
 
         String[] myArray = line.split(COMMA);
-        for(int i = 0; i < myArray.length; i++) {
-            isInitialized = false;
-
+        for (int i = 0; i < myArray.length; i++) {
             if (!(myArray[i].split(SLASH_REGEX)[0].contains(EQUALS) || myArray[i].split(UPPER_COMMA)[0].contains(EQUALS))) {
                 throw new VariablesException(INVALID_ASSIGN_ERROR);
             }
             String name;
-            String type;
-            boolean isFound = false;
             myArray[i] = myArray[i].replace(LINE_END, EMPTY_STR).trim();
             // Extract variable name and assigned value
             String[] parts = myArray[i].split(EQUALS_REGEX);
-            name = parts[0].substring(parts[0].lastIndexOf(EMPTY_CHAR) + 1) +
-                    UNDER_SCORE + HandleCodeLines.currScopeLevel;
-            // Ensure the variable exists in the local scope
-
-            if (!HandleCodeLines.localSymbolsTable.containsKey(name)) {
-                throw new VariablesException(VARIABLE_DOESNT_EXIST_ERROR); //check if variable exists in the scope
+            name = parts[0].substring(parts[0].lastIndexOf(EMPTY_CHAR) + 1);
+            try {
+                if (HandleCodeLines.globalSymbolsTable.containsKey(name)) {
+                    handleLeftLocal(name, parts[1], true);
+                    return;
+                }
+                else if (HandleCodeLines.localSymbolsTable.containsKey(name + UNDER_SCORE +
+                        iterateOverLocalSymbolTableLeft(name))) {
+                    handleLeftLocal(name, parts[1], false);
+                } else {
+                    throw new VariablesException(VARIABLE_DOESNT_EXIST_ERROR); //check if variable exists in the scope
+                }
+            } catch (VariablesException e) {
+                throw e;
             }
             // Prevent modification of final variables
-
-            if (HandleCodeLines.localSymbolsTable.get(name).getValue().getKey().equals(Boolean.TRUE) &&
-                    (HandleCodeLines.localSymbolsTable.get(name).getValue().getValue().equals(Boolean.TRUE))) {
-                throw new VariablesException(FINAL_VARIABLE_CHANE_ERROR);
-            }
-            String origRightName = parts[1];
-
-            // Check if assigned value is another variable
-
-            type = HandleCodeLines.localSymbolsTable.get(name).getKey();
-            if (parts[1].matches(HandleCodeLines.NAME_REGEX)) {
-                // Search for the variable in the current and parent scopes
-
-                for (int j = HandleCodeLines.currScopeLevel; j > 0; j--) {
-                    if (HandleCodeLines.localSymbolsTable.containsKey(parts[1] + UNDER_SCORE + j)) {
-                        parts[1] = parts[1] + UNDER_SCORE + j;
-                        String typeRight = HandleCodeLines.localSymbolsTable.get(parts[1]).getKey();
-                        if (!HandleCodeLines.localSymbolsTable.get(parts[1]).getValue().getValue() ||
-                                !(checkTypes(type, typeRight))) {
-                            throw new VariablesException(NOT_INITIALIZED_ERROR);
-                        }
-                        HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
-                        isFound = true;
-                        break;
-                    }
-                }
-                // If not found locally, check global scope
-
-                if (!isFound) {
-                    if (HandleCodeLines.globalSymbolsTable.containsKey(origRightName)) {
-                        String typeRight = HandleCodeLines.globalSymbolsTable.get(origRightName).getKey();
-                        if (!HandleCodeLines.globalSymbolsTable.get(origRightName).getValue().getValue() ||
-                                !(checkTypes(type, typeRight))) {
-                            throw new VariablesException(TYPE_OR_INITIALIZATION_ERROR);
-                        }
-                        HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
-                    }
-                }
-            }
-            else {
-                // Ensure the assigned value matches the variable type
-
-                try {
-                    handleLiterals(type, parts[1]);
-                } catch (VariablesException e) {
-                    throw e;
-                }
-            }
-            // Update local symbol table with the new value
-
-            HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
         }
-        return true;
-
     }
 
     /*
@@ -448,7 +496,8 @@ public class HandleVariables {
 
                 // Check if the assigned value is another variable
 
-                if(parts[1].matches(HandleCodeLines.NAME_REGEX)) {
+                if(parts[1].matches(HandleCodeLines.NAME_REGEX) && (!parts[1].equals("true"))
+                        && (!parts[1].equals("false"))) {
                     // Ensure the assigned variable is initialized and of the correct type
 
                     if (HandleCodeLines.globalSymbolsTable.containsKey(parts[1])) {
@@ -530,6 +579,9 @@ public class HandleVariables {
             String[] parts = myArray[i].split(EQUALS_REGEX);
             name = parts[0].substring(parts[0].lastIndexOf(EMPTY_CHAR) + 1);
             // Ensure the variable exists in the global scope
+            if (HandleCodeLines.currScopeLevel == 0){
+                isInitialized = true;
+            }
 
             if (!HandleCodeLines.globalSymbolsTable.containsKey(name)) {
                 throw new VariablesException(VARIABLE_DOESNT_EXIST_ERROR);
@@ -543,7 +595,8 @@ public class HandleVariables {
             type = HandleCodeLines.globalSymbolsTable.get(name).getKey();
             // Check if assigned value is another variable
 
-            if (parts[1].matches(HandleCodeLines.NAME_REGEX)) {
+            if (parts[1].matches(HandleCodeLines.NAME_REGEX) && (!parts[1].equals("true"))
+                    && (!parts[1].equals("false")))  {
                 // Ensure the assigned variable exists and is initialized
 
                 if (HandleCodeLines.globalSymbolsTable.containsKey(parts[1])) {
@@ -578,6 +631,8 @@ public class HandleVariables {
         return true;
     }
 
+
+
     /**
      * Processes the declaration of global and local variables, ensuring correct syntax.
      *
@@ -597,6 +652,9 @@ public class HandleVariables {
         // check define / assign
         if(typesAndFinal.contains(line.split(" ")[0])) {
             type = line.split(" ")[0];
+            if (type.equals(FINAL)){
+                type = line.split(" ")[1];
+            }
             VARIABLE_MATCHER.reset(line);
             if (!VARIABLE_MATCHER.matches()) {
                 throw new VariablesException(INVALID_DEFINE_ERROR);
