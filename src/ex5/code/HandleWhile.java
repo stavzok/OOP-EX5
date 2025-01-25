@@ -12,12 +12,11 @@ import java.util.regex.Pattern;
  *
  * @author inbar.el and stavzok
  */
-
 public class HandleWhile {
+
     /*
      * Regular expression pattern for validating while conditions.
      */
-
     private final String WHILE_CONDITION_CONSTANT =
             "while\\s*\\(\\s*" +                 // while followed by opening parenthesis
                     "(true|false|" +                     // condition
@@ -58,7 +57,6 @@ public class HandleWhile {
      */
     private final String UNDER_SCORE = "_";
 
-
     /**
      * Validates and processes a given while statement.
      * Ensures that the while condition follows the correct structure
@@ -71,17 +69,14 @@ public class HandleWhile {
         WHILE_CONDITION_MATCHER.reset(line);
         if(WHILE_CONDITION_MATCHER.matches()) {
             HandleCodeLines.currScopeLevel++;
-
             HandleCodeLines.NAME_MATCHER.reset(line);
             while(HandleCodeLines.NAME_MATCHER.find()) {
                 String foundName = HandleCodeLines.NAME_MATCHER.group();
                 // check if a variable inside the while statement is not initialized or is not of a correct type
-
                 for(int i = HandleCodeLines.currScopeLevel; i > -1; i--) {
                     if(i == 0) {
                         if(HandleCodeLines.globalSymbolsTable.containsKey(foundName)) {
                             // global symbol table
-
                             if (!HandleCodeLines.globalSymbolsTable.get(foundName).getValue().getValue()
                                     || !validTypes.contains(HandleCodeLines.globalSymbolsTable.get(foundName).getKey())) {
                                 throw new WhileException(WHILE_CONDITION_COMPONENTS_ERROR);
@@ -90,7 +85,6 @@ public class HandleWhile {
                         }
                     }
                     // local symbol table
-
                     else if(HandleCodeLines.localSymbolsTable.containsKey(foundName + UNDER_SCORE + i)) {
                         foundName = foundName + UNDER_SCORE + i;
                         if (!HandleCodeLines.localSymbolsTable.get(foundName).getValue().getValue()

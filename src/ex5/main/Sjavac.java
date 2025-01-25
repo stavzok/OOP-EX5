@@ -40,7 +40,6 @@ public class Sjavac {
      *
      * @param args Command-line arguments. Expected: a single file path.
      */
-
     public static void main(String[] args) {
 
         ArrayList<String> lines;

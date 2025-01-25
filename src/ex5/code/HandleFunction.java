@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
  *
  * @author inbar.el and stavzok
  */
-
 public class HandleFunction {
 
     /*
@@ -81,21 +80,36 @@ public class HandleFunction {
     private final char UNDER_SCORE_CHAR = '_';
     private final String COMMA = ",";
     private final String SPACE = " ";
-    private final String VOID = "void";
-    private final String FINAL = "final";
-    private final String IF = "if";
-    private final String WHILE = "while";
     private final char OPENING_PARENTHESES = '(';
     private final char CLOSING_PARENTHESES = ')';
     private final String OPENING_PARENTHESES_STR = "(";
     private final String CLOSING_PARENTHESES_STR = ")";
+    private final String SPACE_REGEX = "\\s+";
     private final String CLOSING_BRACKETS = "}";
     private final String FIRST_SCOPE = "_1";
 
+    /*
+     * Types, keywords and final, used for function handling.
+     */
+    private final String INT = "int";
+    private final String DOUBLE = "double";
+    private final String BOOLEAN = "boolean";
+    private final String VOID = "void";
+    private final String FINAL = "final";
+    private final String IF = "if";
+    private final String WHILE = "while";
+
+    /*
+     * Handlers of different cases and line types that may appear inside a function.
+     */
     private final HandleIf ifHandler;
     private final HandleWhile whileHandler;
     private final HandleVariables variablesHandler;
 
+    /**
+     * Constructs a new HandleFunction object,
+     * defines the handlers that will be used in this class.
+     */
     public HandleFunction() {
         ifHandler = new HandleIf();
         whileHandler = new HandleWhile();
@@ -196,48 +210,49 @@ public class HandleFunction {
         if(!FUNCTION_NAME_MATCHER.matches()) {
             throw new FunctionDeclarationException(FUNCTION_DECLARATION_ERROR);
         }
-
         boolean isFinal = line.contains(FINAL);
-
-
         // Extract the part of the line before the opening parenthesis
-        String name = line.substring(0, line.indexOf('('));
-
+        String name = line.substring(0, line.indexOf(OPENING_PARENTHESES));
         // Split by spaces and get the last element before '('
-        name = name.split(" ")[1].trim();
+        name = name.split(SPACE)[1].trim();
         if (HandleCodeLines.functionSymbols.containsKey(name)){
             throw new FunctionDeclarationException(FUNCTIONS_WITH_SAME_NAME_ERROR);
         }
-
         // Extract parameters (assuming parameters are within parentheses)
-        String parameterPart = line.substring(line.indexOf('(') + 1, line.indexOf(')'));
-        String[] parameters = parameterPart.split(",");
+        String parameterPart = line.substring(line.indexOf(OPENING_PARENTHESES) + 1, line.indexOf(CLOSING_PARENTHESES));
+        String[] parameters = parameterPart.split(COMMA);
         ArrayList<Map.Entry<Map.Entry<String, Boolean>, String>> innerArray = new ArrayList<>();
         for (String parameter : parameters) {
             parameter = parameter.trim(); // Clean up spaces
             if (!parameter.isEmpty()) {   // Ensure parameter is not empty
-
-                String[] parameterArray = parameter.split("\\s+");
+                String[] parameterArray = parameter.split(SPACE_REGEX);
                 if (parameterArray[0].equals(FINAL)) {
                     parameterArray[0] = parameterArray[1];
                     parameterArray[1] = parameterArray[2];
 
                 }
-
                 innerArray.add(Map.entry(Map.entry(parameterArray[0], isFinal), parameterArray[1])); // type and then name
             }
         }
         HandleCodeLines.functionSymbols.put(name, innerArray);
     }
 
+    /*
+     * Checks if the type of a function parameter matches the expected type.
+     * This method allows implicit type conversions where applicable (e.g., int to double, int/double to boolean).
+     *
+     * @param funcType The expected function parameter type.
+     * @param callType The actual type being passed in the function call.
+     * @return true if the types are compatible, false otherwise.
+     */
     private boolean checkTypes(String funcType, String callType){
         if (!(callType.equals(funcType))) {
-            if (funcType.equals("double")) {
-                if (!callType.equals("int")) {
+            if (funcType.equals(DOUBLE)) {
+                if (!callType.equals(INT)) {
                     return false;
                 }
-            } else if (funcType.equals("boolean")) {
-                if (!callType.equals("double") && !callType.equals("int")) {
+            } else if (funcType.equals(BOOLEAN)) {
+                if (!callType.equals(DOUBLE) && !callType.equals(INT)) {
                     return false;
                 }
             }

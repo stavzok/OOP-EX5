@@ -125,7 +125,6 @@ public class HandleCodeLines {
      *
      * @throws TypeOneException If an invalid statement is encountered.
      */
-
     public void handleLines() throws TypeOneException {
         for(String codeLine: codeLines) {
             codeLine = codeLine.replaceAll(SPACE_REGEX, " ");
