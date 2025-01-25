@@ -8,15 +8,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Handles the declaration and assignment of variables.
- * This class ensures that variables are properly defined, assigned, and checked for scope rules.
- * It supports global and local variable management while enforcing S-Java syntax rules.
+ * Handles the declaration, assignment, and validation of variables in S-Java.
+ * This class ensures variables are properly defined, assigned, and comply with scope rules.
+ * It supports both global and local variables, including type validation and final constraints.
  *
  * @author inbar.el and stavzok
  */
 public class HandleVariables {
+
     /*
-     * Regular expressions for detecting and validating different variable types and assignments.
+     * Regular expressions for detecting and validating variable assignments.
+     * These patterns help identify valid S-Java variable declarations and assignments.
      */
     private final String INT_PATTERN_ASSIGN =
             HandleCodeLines.NAME_REGEX + "(\\s*=\\s*([+-]?\\d+|" + HandleCodeLines.NAME_REGEX +
@@ -43,9 +45,6 @@ public class HandleVariables {
             "(\\s*=\\s*(\'.\'|" + HandleCodeLines.NAME_REGEX + "))?(\\s*,\\s*"
             + HandleCodeLines.NAME_REGEX + "(\\s*=\\s*(\'.\'|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
-    /*
-     * Pattern for validating variable of different types.
-     */
     private final Pattern VARIABLE_PATTERN_ASSIGN =
             Pattern.compile(INT_PATTERN_ASSIGN + "|" + DOUBLE_PATTERN_ASSIGN +"|" + STRING_PATTERN_ASSIGN +
                     "|" + BOOLEAN_PATTERN_ASSIGN +"|" + CHAR_PATTERN_ASSIGN );
@@ -84,13 +83,13 @@ public class HandleVariables {
     public final Matcher VARIABLE_MATCHER = VARIABLE_PATTERN.matcher("");
 
     /*
-     * Data types supported in the program and final.
+     * A set containing all supported data types and the final keyword.
      */
     private final HashSet<String> typesAndFinal = new HashSet<>(Arrays.asList("int", "double", "String", "char",
             "boolean", "final"));
 
     /*
-     * Error messages for variable-related issues.
+     * Error messages for various variable-related issues.
      */
     private final String TYPE_ERROR = "The type is not recognized!";
     private final String TYPE_ASSIGNMENT_ERROR = "The assigned value is not in the right type!";
@@ -105,7 +104,7 @@ public class HandleVariables {
     private final String GLOBAL_CALL_FUNCTION_EXCEPTION = "Can't call a function from global scope!";
 
     /*
-     * Type names used in the program.
+     * Constants representing variable types.
      */
     private final String DOUBLE = "double";
     private final String INT = "int";
@@ -129,6 +128,14 @@ public class HandleVariables {
     private final char EMPTY_CHAR = ' ';
 
 
+    /**
+     * Validates and processes literals assigned to a variable.
+     * Ensures type compatibility and throws an exception if a mismatch is found.
+     *
+     * @param type      The expected type of the variable.
+     * @param rightName The assigned value (literal or variable name).
+     * @throws VariablesException If the type is invalid or mismatched.
+     */
     private void handleLiterals(String type, String rightName) throws VariablesException{
         String typeRight;
         typeRight = HandleCodeLines.findType(rightName);
@@ -150,6 +157,14 @@ public class HandleVariables {
         
     }
 
+    /**
+     * Checks whether two types are compatible.
+     * Allows implicit conversions (e.g., int to double).
+     *
+     * @param type      The expected type.
+     * @param typeRight The actual type being assigned.
+     * @return true if the types are compatible, false otherwise.
+     */
     private boolean checkTypes(String type, String typeRight){
         if (!(typeRight.equals(type))) {
             if (type.equals(DOUBLE)) {
@@ -167,7 +182,14 @@ public class HandleVariables {
         }
         return true;
     }
-    
+
+    /**
+     * Defines a new local variable by parsing its declaration and checking constraints.
+     *
+     * @param line The line of code defining the variable.
+     * @param type The type of the variable.
+     * @throws VariablesException If the variable is invalid or already exists.
+     */
     private void handleDefineLocalVariable(String line, String type) throws VariablesException{
         boolean isInitialized;
         boolean isFinal;
@@ -236,6 +258,16 @@ public class HandleVariables {
         }
     }
 
+    /**
+     * Handles a local variable that is declared but not assigned.
+     * Ensures the variable does not already exist and adds it to the symbol table.
+     *
+     * @param arrayI       The variable declaration.
+     * @param isFinal      Whether the variable is final.
+     * @param isInitialized Whether the variable is initialized.
+     * @param type         The type of the variable.
+     * @throws VariablesException If the variable is invalid or already exists.
+     */
     private void handleUnassignedLocalVariable(String arrayI, boolean isFinal,
                                                       boolean isInitialized, String type) throws VariablesException{
         arrayI = arrayI.replace(LINE_END , EMPTY_STR).trim();
@@ -251,6 +283,14 @@ public class HandleVariables {
         HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
     }
 
+    /**
+     * Checks if a variable is final and whether it is initialized at declaration.
+     *
+     * @param arrayI The specific variable declaration.
+     * @param array0 The entire declaration line.
+     * @return A boolean array containing {isInitialized, isFinal}.
+     * @throws VariablesException If a final variable is not initialized.
+     */
     private boolean[] checkFinalAndInitialized(String arrayI, String array0) throws VariablesException {
         boolean isInitialized = false;
         boolean isFinal = false;
@@ -268,6 +308,15 @@ public class HandleVariables {
         return new boolean[]{isInitialized, isFinal};
     }
 
+    /**
+     * Searches for a variable in the local scope hierarchy.
+     * Ensures the variable exists and is properly initialized.
+     *
+     * @param type      The expected type of the variable.
+     * @param rightName The name of the variable to check.
+     * @return The scope level where the variable was found, or -1 if not found.
+     * @throws VariablesException If the variable is uninitialized or does not exist.
+     */
     private int iterateOverLocalSymbolTable(String type, String rightName) throws VariablesException {
         for (int j = HandleCodeLines.currScopeLevel; j > 0; j--) {
             if (HandleCodeLines.localSymbolsTable.containsKey(rightName + UNDER_SCORE + j)) {
@@ -284,6 +333,12 @@ public class HandleVariables {
         return -1;
     }
 
+    /**
+     * Searches for a variable in the local scope hierarchy (left-hand side assignment).
+     *
+     * @param rightName The name of the variable to check.
+     * @return The scope level where the variable was found, or -1 if not found.
+     */
     private int iterateOverLocalSymbolTableLeft( String rightName) throws VariablesException {
         for (int j = HandleCodeLines.currScopeLevel; j > 0; j--) {
             if (HandleCodeLines.localSymbolsTable.containsKey(rightName + UNDER_SCORE + j)) {
@@ -293,6 +348,14 @@ public class HandleVariables {
         return -1;
     }
 
+    /**
+     * Ensures a variable is valid for assignment.
+     * Prevents assigning values to final variables.
+     *
+     * @param name     The variable name.
+     * @param isGlobal Whether the variable is global.
+     * @throws VariablesException If the variable is final.
+     */
     private void checkAssignedVariableValidity(String name, boolean isGlobal) throws VariablesException {
         HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> table;
         if (isGlobal) {
@@ -307,6 +370,15 @@ public class HandleVariables {
         }
     }
 
+    /**
+     * Handles the assignment of a value to a local or global variable.
+     * Ensures correct type matching and scope resolution.
+     *
+     * @param name     The name of the variable being assigned.
+     * @param rightName The value being assigned.
+     * @param isGlobal Whether the variable is global.
+     * @throws VariablesException If assignment is invalid.
+     */
     private void handleLeftLocal(String name, String rightName, boolean isGlobal) throws VariablesException {
         HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> table;
 
@@ -363,6 +435,12 @@ public class HandleVariables {
         }
     }
 
+    /**
+     * Parses and processes the assignment of a local variable.
+     *
+     * @param line The assignment statement.
+     * @throws VariablesException If assignment is invalid.
+     */
     private void handleAssignLocalVariable(String line) throws VariablesException {
         String[] myArray = line.split(COMMA);
         for (int i = 0; i < myArray.length; i++) {
@@ -392,6 +470,13 @@ public class HandleVariables {
         }
     }
 
+    /**
+     * Defines a new global variable by parsing its declaration and checking constraints.
+     *
+     * @param line The line of code defining the variable.
+     * @param type The type of the variable.
+     * @throws VariablesException If the variable is invalid or already exists.
+     */
     private void handleDefineGlobalVariable(String line,String type) throws VariablesException {
         boolean isInitialized;
         boolean isFinal;
@@ -457,6 +542,12 @@ public class HandleVariables {
         }
     }
 
+    /**
+     * Parses and processes the assignment of a global variable.
+     *
+     * @param line The assignment statement.
+     * @throws VariablesException If assignment is invalid.
+     */
     private void handleAssignGlobalVariable(String line) throws VariablesException {
         boolean isInitialized;
         boolean isFinal = false;
@@ -519,6 +610,13 @@ public class HandleVariables {
         }
     }
 
+    /**
+     * Handles both defining and assigning variables, determining scope and type.
+     *
+     * @param line The line of code containing the variable definition or assignment.
+     * @throws TypeOneException If an invalid type is used.
+     * @throws FunctionCallException If a function is called from global scope.
+     */
     public void defineAssignVariable(String line) throws TypeOneException, FunctionCallException {
         // check if global / local
         String type;

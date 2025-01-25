@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
  *
  * @author inbar.el and stavzok
  */
-
 public class HandleCodeLines {
+
     /*
      * List of code lines to be processed.
      */
@@ -28,7 +28,6 @@ public class HandleCodeLines {
     /**
      * Regular expressions and patterns for variable names, integers, and doubles.
      */
-
     public static final String NAME_REGEX = "([a-zA-Z]|_[a-zA-Z0-9])(_?[a-zA-Z0-9])*_?";
     public static final Pattern NAME_PATTERN = Pattern.compile(NAME_REGEX);
     public static final Matcher NAME_MATCHER = NAME_PATTERN.matcher("");
@@ -38,7 +37,6 @@ public class HandleCodeLines {
     /**
      * Tracks the current scope level of the code.
      */
-
     public static int currScopeLevel = 0;
 
     /**
@@ -58,10 +56,12 @@ public class HandleCodeLines {
      */
     private static final String RETURN_REGEX = "return\\s*;";
     private static final Pattern RETURN_PATTERN = Pattern.compile(RETURN_REGEX);
+
     /**
      * Matcher for the return statement pattern.
      */
     public static final Matcher RETURN_MATCHER = RETURN_PATTERN.matcher("");
+
     /**
      * Indicates if a return statement has been encountered in the current scope.
      */
@@ -105,11 +105,14 @@ public class HandleCodeLines {
     private final String COMMENT_ERROR = "The comment format is illegal!";
     private final String END_OF_LINE_ERROR = "End of line error!";
 
+    /*
+     * Handlers for different types of code lines.
+     */
     private final HandleVariables variablesHandler;
     private final HandleFunction functionHandler;
 
     /**
-     * Constructs a new HandleCodeLines instance with the provided lines of code.
+     * Constructs a new HandleCodeLines instance with the provided lines of code and with the needed handlers.
      *
      * @param codeLines The lines of code to be processed.
      */
@@ -155,7 +158,6 @@ public class HandleCodeLines {
      * @param line The line of code to validate.
      * @throws TypeOneException If an invalid statement is encountered.
      */
-
     private void handleLine(String line) throws TypeOneException {
         if (COMMENT_START_MATCHER.reset(line).find()) {
 
@@ -166,7 +168,6 @@ public class HandleCodeLines {
         if(line.startsWith(ILLEGAL_COMMENT_START)) {
             throw new CommentException(COMMENT_ERROR);
         }
-
 
         if (line.startsWith(LEGAL_COMMENT_START)) {
             return;
@@ -213,8 +214,6 @@ public class HandleCodeLines {
         }
     }
 
-
-
     /**
      * Determines the data type of a given parameter.
      * This method checks if the parameter matches known data types
@@ -223,8 +222,6 @@ public class HandleCodeLines {
      * @param parameter The parameter to analyze.
      * @return The detected type of the parameter, or null if unknown.
      */
-
-
     public static String findType(String parameter) {
 
         // Check for boolean (true/false)

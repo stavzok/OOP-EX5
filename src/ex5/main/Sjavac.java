@@ -19,7 +19,10 @@ import java.util.ArrayList;
  * @author inbar.el and stavzok
  */
 public class Sjavac {
-    /* Error messages for various input and file-related issues. */
+
+    /*
+    * Error messages for various input and file-related issues.
+    */
     private static final String ARGUMENTS_NUM_ERROR = "Error: Invalid number of arguments. Expected 1 argument.";
     private static final String S_JAVA_SUFFIX = ".sjava";
     private static final String FILE_FORMAT_ERROR = "Invalid file format: Expected .sjava file.";
@@ -28,6 +31,11 @@ public class Sjavac {
     private static final String EMPTY_FILE_ERROR = "Error: The file is empty.";
     private static final String BINARY_DATA_ERROR = "Error: File contains non-text (binary) data.";
     private static final String IO_ERROR = "Error: An IO error occurred while reading the file.";
+    private static final String NOT_CLOSING_METHOD_ERROR = "A method isn't closed!";
+
+    /*
+     * A regex that helps identify binary input file.
+     */
     private static final String BINARY_REGEX = "[\\p{Print}\\s]*";
 
     /**
@@ -62,7 +70,7 @@ public class Sjavac {
             return;
         }
         if (HandleCodeLines.currScopeLevel > 0){
-            System.err.println("A method isn't closed!");
+            System.err.println(NOT_CLOSING_METHOD_ERROR);
             System.out.println(1);
 
         }
