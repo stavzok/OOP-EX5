@@ -7,7 +7,6 @@ import java.io.*;
 import java.util.ArrayList;
 
 
-
 /**
  * The main class for the Sjavac program. This class handles input validation,
  * error checking, and the overall flow of the program.
@@ -23,7 +22,8 @@ public class Sjavac {
     /*
     * Error messages for various input and file-related issues.
     */
-    private static final String ARGUMENTS_NUM_ERROR = "Error: Invalid number of arguments. Expected 1 argument.";
+    private static final String ARGUMENTS_NUM_ERROR =
+            "Error: Invalid number of arguments. Expected 1 argument.";
     private static final String S_JAVA_SUFFIX = ".sjava";
     private static final String FILE_FORMAT_ERROR = "Invalid file format: Expected .sjava file.";
     private static final String FILE_NOT_FOUND_ERROR = "Error: File not found.";

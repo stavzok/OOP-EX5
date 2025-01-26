@@ -78,7 +78,8 @@ public class HandleIf {
                         // global symbol table
                         if(HandleCodeLines.globalSymbolsTable.containsKey(foundName)) {
                             if (!HandleCodeLines.globalSymbolsTable.get(foundName).getValue().getValue()
-                            || !validTypes.contains(HandleCodeLines.globalSymbolsTable.get(foundName).getKey())) {
+                            || !validTypes.contains
+                                    (HandleCodeLines.globalSymbolsTable.get(foundName).getKey())) {
                                 throw new IfException(IF_CONDITION_COMPONENTS_ERROR);
                             }
                             break;
@@ -88,7 +89,8 @@ public class HandleIf {
                     else if(HandleCodeLines.localSymbolsTable.containsKey(foundName + UNDER_SCORE + i)) {
                         foundName = foundName + UNDER_SCORE + i;
                         if (!HandleCodeLines.localSymbolsTable.get(foundName).getValue().getValue()
-                                || !validTypes.contains(HandleCodeLines.localSymbolsTable.get(foundName).getKey()))
+                                || !validTypes.contains(
+                                        HandleCodeLines.localSymbolsTable.get(foundName).getKey()))
                         {
                             throw new IfException(IF_CONDITION_COMPONENTS_ERROR);
                         }

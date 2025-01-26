@@ -57,12 +57,14 @@ public class HandleVariables {
                     "(\\s*=\\s*([+-]?\\d+|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
     private final String DOUBLE_PATTERN =
-            "(final\\s+)?double\\s+" + HandleCodeLines.NAME_REGEX + "(\\s*=\\s*([+-]?(\\d+(\\.\\d*)?|\\.\\d+)|"
+            "(final\\s+)?double\\s+" + HandleCodeLines.NAME_REGEX +
+                    "(\\s*=\\s*([+-]?(\\d+(\\.\\d*)?|\\.\\d+)|"
                     + HandleCodeLines.NAME_REGEX + "))?" +
                     "(\\s*,\\s*" + HandleCodeLines.NAME_REGEX +
                     "(\\s*=\\s*([+-]?(\\d+(\\.\\d*)?|\\.\\d+)|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
-    private String STRING_PATTERN =  "(final\\s+)?String\\s+"+ HandleCodeLines.NAME_REGEX + "(\\s*=\\s*(\".*\"|"
+    private String STRING_PATTERN =
+            "(final\\s+)?String\\s+"+ HandleCodeLines.NAME_REGEX + "(\\s*=\\s*(\".*\"|"
             + HandleCodeLines.NAME_REGEX + "))?(\\s*,\\s*"
             + HandleCodeLines.NAME_REGEX + "(\\s*=\\s*(\".*\"|" +
             HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
@@ -77,16 +79,26 @@ public class HandleVariables {
             "(\\s*=\\s*('.'|" + HandleCodeLines.NAME_REGEX + "))?(\\s*,\\s*"
             + HandleCodeLines.NAME_REGEX + "(\\s*=\\s*('.'|" + HandleCodeLines.NAME_REGEX + "))?)*\\s*;";
 
+
+    /**
+     * Pattern for detecting and validating variable assignments.
+     * Helps identify valid S-Java variable declarations and assignments.
+     */
     public final Pattern VARIABLE_PATTERN =
             Pattern.compile(INT_PATTERN + "|" + DOUBLE_PATTERN +"|" + STRING_PATTERN +
                     "|" + BOOLEAN_PATTERN +"|" + CHAR_PATTERN );
+
+    /**
+     * Matcher for detecting and validating variable assignments.
+     * Helps identify valid S-Java variable declarations and assignments.
+     */
     public final Matcher VARIABLE_MATCHER = VARIABLE_PATTERN.matcher("");
 
     /*
      * A set containing all supported data types and the final keyword.
      */
-    private final HashSet<String> typesAndFinal = new HashSet<>(Arrays.asList("int", "double", "String", "char",
-            "boolean", "final"));
+    private final HashSet<String> typesAndFinal = new HashSet<>(Arrays.asList("int", "double", "String",
+            "char", "boolean", "final"));
 
     /*
      * Error messages for various variable-related issues.
@@ -128,7 +140,7 @@ public class HandleVariables {
     private final char EMPTY_CHAR = ' ';
 
 
-    /**
+    /*
      * Validates and processes literals assigned to a variable.
      * Ensures type compatibility and throws an exception if a mismatch is found.
      *
@@ -154,10 +166,9 @@ public class HandleVariables {
                 }
             }
         }
-        
     }
 
-    /**
+    /*
      * Checks whether two types are compatible.
      * Allows implicit conversions (e.g., int to double).
      *
@@ -183,7 +194,7 @@ public class HandleVariables {
         return true;
     }
 
-    /**
+    /*
      * Defines a new local variable by parsing its declaration and checking constraints.
      *
      * @param line The line of code defining the variable.
@@ -209,7 +220,8 @@ public class HandleVariables {
                 boolean isFound = false;
                 // Check if the variable already exists in the current local scope.
                 if (HandleCodeLines.localSymbolsTable.containsKey(name)){
-                    throw new VariablesException(VARIABLE_EXISTS_ERROR); //check if variable exists in the scope
+                    //check if variable exists in the scope
+                    throw new VariablesException(VARIABLE_EXISTS_ERROR);
                 }
                 String origRightName = parts[1];
                 // Check if the right-hand side of the assignment is another variable.
@@ -218,7 +230,8 @@ public class HandleVariables {
                     // Look for the variable in the current and higher scope levels.
                     try {
                         if(iterateOverLocalSymbolTable(type, origRightName) != -1){
-                            HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
+                            HandleCodeLines.localSymbolsTable.put(name,
+                                    Map.entry(type, Map.entry(isFinal, isInitialized)));
                         }
                     }
                     catch (VariablesException e){
@@ -227,12 +240,15 @@ public class HandleVariables {
                     // If the variable wasn't found locally, check the global symbol table.
                     if (!isFound) {
                         if (HandleCodeLines.globalSymbolsTable.containsKey(origRightName)) {
-                            String typeRight = HandleCodeLines.globalSymbolsTable.get(origRightName).getKey();
-                            if (!HandleCodeLines.globalSymbolsTable.get(origRightName).getValue().getValue() ||
+                            String typeRight =
+                                    HandleCodeLines.globalSymbolsTable.get(origRightName).getKey();
+                            if (!HandleCodeLines.
+                                    globalSymbolsTable.get(origRightName).getValue().getValue() ||
                                     !(checkTypes(type, typeRight))) {
                                 throw new VariablesException(TYPE_OR_INITIALIZATION_ERROR);
                             }
-                            HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
+                            HandleCodeLines.localSymbolsTable.put(name, Map.entry(type,
+                                    Map.entry(isFinal, isInitialized)));
                         }
                     }
                 }
@@ -244,7 +260,8 @@ public class HandleVariables {
                         throw e;
                     }
                     // Store the new variable in the local symbol table.
-                    HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
+                    HandleCodeLines.localSymbolsTable.put(name, Map.entry(type,
+                            Map.entry(isFinal, isInitialized)));
                 }
             }
             // Variable is declared but not assigned a value.
@@ -258,7 +275,7 @@ public class HandleVariables {
         }
     }
 
-    /**
+    /*
      * Handles a local variable that is declared but not assigned.
      * Ensures the variable does not already exist and adds it to the symbol table.
      *
@@ -269,7 +286,8 @@ public class HandleVariables {
      * @throws VariablesException If the variable is invalid or already exists.
      */
     private void handleUnassignedLocalVariable(String arrayI, boolean isFinal,
-                                                      boolean isInitialized, String type) throws VariablesException{
+                                                      boolean isInitialized,
+                                               String type) throws VariablesException{
         arrayI = arrayI.replace(LINE_END , EMPTY_STR).trim();
         // Extract the variable name from the declaration.
         String name;
@@ -283,7 +301,7 @@ public class HandleVariables {
         HandleCodeLines.localSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
     }
 
-    /**
+    /*
      * Checks if a variable is final and whether it is initialized at declaration.
      *
      * @param arrayI The specific variable declaration.
@@ -308,7 +326,7 @@ public class HandleVariables {
         return new boolean[]{isInitialized, isFinal};
     }
 
-    /**
+    /*
      * Searches for a variable in the local scope hierarchy.
      * Ensures the variable exists and is properly initialized.
      *
@@ -333,7 +351,7 @@ public class HandleVariables {
         return -1;
     }
 
-    /**
+    /*
      * Searches for a variable in the local scope hierarchy (left-hand side assignment).
      *
      * @param rightName The name of the variable to check.
@@ -348,7 +366,7 @@ public class HandleVariables {
         return -1;
     }
 
-    /**
+    /*
      * Ensures a variable is valid for assignment.
      * Prevents assigning values to final variables.
      *
@@ -370,7 +388,7 @@ public class HandleVariables {
         }
     }
 
-    /**
+    /*
      * Handles the assignment of a value to a local or global variable.
      * Ensures correct type matching and scope resolution.
      *
@@ -435,7 +453,7 @@ public class HandleVariables {
         }
     }
 
-    /**
+    /*
      * Parses and processes the assignment of a local variable.
      *
      * @param line The assignment statement.
@@ -444,7 +462,8 @@ public class HandleVariables {
     private void handleAssignLocalVariable(String line) throws VariablesException {
         String[] myArray = line.split(COMMA);
         for (int i = 0; i < myArray.length; i++) {
-            if (!(myArray[i].split(SLASH_REGEX)[0].contains(EQUALS) || myArray[i].split(UPPER_COMMA)[0].contains(EQUALS))) {
+            if (!(myArray[i].split(SLASH_REGEX)[0].contains(EQUALS) ||
+                    myArray[i].split(UPPER_COMMA)[0].contains(EQUALS))) {
                 throw new VariablesException(INVALID_ASSIGN_ERROR);
             }
             String name;
@@ -470,7 +489,7 @@ public class HandleVariables {
         }
     }
 
-    /**
+    /*
      * Defines a new global variable by parsing its declaration and checking constraints.
      *
      * @param line The line of code defining the variable.
@@ -503,7 +522,8 @@ public class HandleVariables {
                     if (HandleCodeLines.globalSymbolsTable.containsKey(parts[1])) {
                         String typeRight = HandleCodeLines.globalSymbolsTable.get(parts[1]).getKey();
 
-                        if (HandleCodeLines.globalSymbolsTable.get(parts[1]).getValue().getValue().equals(Boolean.FALSE)
+                        if (HandleCodeLines.globalSymbolsTable.get(parts[1]).getValue().
+                                getValue().equals(Boolean.FALSE)
                                 || !(checkTypes(type, typeRight))) {
                             throw new VariablesException(TYPE_OR_INITIALIZATION_ERROR);
                         }
@@ -513,7 +533,8 @@ public class HandleVariables {
 
                     }
                     // Store variable in the global symbol table
-                    HandleCodeLines.globalSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
+                    HandleCodeLines.globalSymbolsTable.put(name,
+                            Map.entry(type, Map.entry(isFinal, isInitialized)));
                 }
                 else {
                     // Validate the assigned value type
@@ -524,7 +545,8 @@ public class HandleVariables {
                         throw e;
                     }
                     // Store variable in the global symbol table
-                    HandleCodeLines.globalSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
+                    HandleCodeLines.globalSymbolsTable.put(name,
+                            Map.entry(type, Map.entry(isFinal, isInitialized)));
                 }
             }
             else{
@@ -534,15 +556,16 @@ public class HandleVariables {
                 name = myArray[i].substring(myArray[i].lastIndexOf(' ') + 1);
                 // Ensure the variable does not already exist
                 if (HandleCodeLines.globalSymbolsTable.containsKey(name)){
-                    throw new VariablesException(VARIABLE_EXISTS_ERROR); //check if variable exists in the scope
+                    throw new VariablesException(VARIABLE_EXISTS_ERROR);
                 }
                 // Store uninitialized variable in the global symbol table
-                HandleCodeLines.globalSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
+                HandleCodeLines.globalSymbolsTable.put(name,
+                        Map.entry(type, Map.entry(isFinal, isInitialized)));
             }
         }
     }
 
-    /**
+    /*
      * Parses and processes the assignment of a global variable.
      *
      * @param line The assignment statement.
@@ -574,7 +597,8 @@ public class HandleVariables {
             }
             // Prevent modification of final variables
             if (HandleCodeLines.globalSymbolsTable.get(name).getValue().getKey().equals(Boolean.TRUE) &&
-                    (HandleCodeLines.globalSymbolsTable.get(name).getValue().getValue().equals(Boolean.TRUE))) {
+                    (HandleCodeLines.globalSymbolsTable.
+                            get(name).getValue().getValue().equals(Boolean.TRUE))) {
                 throw new VariablesException(FINAL_VARIABLE_CHANE_ERROR);
             }
             type = HandleCodeLines.globalSymbolsTable.get(name).getKey();
@@ -594,7 +618,8 @@ public class HandleVariables {
                     throw new VariablesException(VARIABLE_DOESNT_EXIST_ERROR);
                 }
                 // Store updated value in the global symbol table
-                HandleCodeLines.globalSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
+                HandleCodeLines.globalSymbolsTable.put(name,
+                        Map.entry(type, Map.entry(isFinal, isInitialized)));
             }
             else {
                 // Ensure the assigned value matches the variable type
@@ -605,7 +630,8 @@ public class HandleVariables {
                     throw e;
                 }
                 // Store updated value in the global symbol table
-                HandleCodeLines.globalSymbolsTable.put(name, Map.entry(type, Map.entry(isFinal, isInitialized)));
+                HandleCodeLines.globalSymbolsTable.put(name,
+                        Map.entry(type, Map.entry(isFinal, isInitialized)));
             }
         }
     }

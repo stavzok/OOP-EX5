@@ -20,7 +20,8 @@ public class HandleFunction {
      * Regular expression pattern for detecting function declarations.
      */
     private final String PATTERN_TYPE = "(int|double|String|boolean|char)";
-    private final String FUNCTION_NAME_REGEX = "void\\s+[a-zA-Z](_?[a-zA-Z0-9])*_?\\s*\\(\\s*(\\s*(final\\s+)?" +
+    private final String FUNCTION_NAME_REGEX =
+            "void\\s+[a-zA-Z](_?[a-zA-Z0-9])*_?\\s*\\(\\s*(\\s*(final\\s+)?" +
             PATTERN_TYPE + "\\s+" + HandleCodeLines.NAME_REGEX +
             "\\s*(,\\s*(final\\s+)?" + PATTERN_TYPE + "\\s+" + HandleCodeLines.NAME_REGEX + ")*)?\\)\\s*";
     private final Pattern FUNCTION_NAME_PATTERN = Pattern.compile(FUNCTION_NAME_REGEX + "\\{");
@@ -55,6 +56,10 @@ public class HandleFunction {
                     ")?" +                               // end optional group for arguments
                     "\\)\\s*;";                          // closing parenthesis and semicolon
     private static final Pattern FUNCTION_CALL_PATTERN = Pattern.compile(FUNCTION_CALL_REGEX);
+
+    /**
+     * The matcher for the function call pattern.
+     */
     public static final Matcher FUNCTION_CALL_MATCHER = FUNCTION_CALL_PATTERN.matcher("");
 
     /*
@@ -65,7 +70,8 @@ public class HandleFunction {
     private final String FUNCTION_DECLARATION_ERROR = "Not a valid function declaration!";
     private final String FUNCTION_CALL_ERROR = "Not a valid function call!";
     private final String FUNCTIONS_WITH_SAME_NAME_ERROR = "Can't declare two functions with the same name!";
-    private final String ARGUMENT_NOT_INITIALIZED_ERROR = "Can't call a function with uninitialized argument!";
+    private final String ARGUMENT_NOT_INITIALIZED_ERROR =
+            "Can't call a function with uninitialized argument!";
     private final String INVALID_ARGUMENT_ERROR = "Invalid argument was passed to the function!";
     private final String WRONG_NUM_OF_ARGUMENTS_ERROR = "Wrong number of arguments foe the function!";
     private final String ARGUMENT_TYPE_ERROR = "The type of the argument is incorrect!";
@@ -139,7 +145,8 @@ public class HandleFunction {
             HandleCodeLines.localSymbolsTable = new HashMap<>();
             ArrayList<Map.Entry<Map.Entry<String, Boolean>, String>> currentFunction;
             currentFunction =
-                    HandleCodeLines.functionSymbols.get(line.split(SPACE)[1].split(OPENING_PARENTHESES_REGEX)[0]);
+                    HandleCodeLines.functionSymbols.
+                            get(line.split(SPACE)[1].split(OPENING_PARENTHESES_REGEX)[0]);
             if (!(currentFunction == null)) {
                 for (Map.Entry<Map.Entry<String, Boolean>, String> functionSymbol : currentFunction) {
                     HandleCodeLines.localSymbolsTable.put(functionSymbol.getValue() +
@@ -219,7 +226,8 @@ public class HandleFunction {
             throw new FunctionDeclarationException(FUNCTIONS_WITH_SAME_NAME_ERROR);
         }
         // Extract parameters (assuming parameters are within parentheses)
-        String parameterPart = line.substring(line.indexOf(OPENING_PARENTHESES) + 1, line.indexOf(CLOSING_PARENTHESES));
+        String parameterPart =
+                line.substring(line.indexOf(OPENING_PARENTHESES) + 1, line.indexOf(CLOSING_PARENTHESES));
         String[] parameters = parameterPart.split(COMMA);
         ArrayList<Map.Entry<Map.Entry<String, Boolean>, String>> innerArray = new ArrayList<>();
         for (String parameter : parameters) {
@@ -231,7 +239,7 @@ public class HandleFunction {
                     parameterArray[1] = parameterArray[2];
 
                 }
-                innerArray.add(Map.entry(Map.entry(parameterArray[0], isFinal), parameterArray[1])); // type and then name
+                innerArray.add(Map.entry(Map.entry(parameterArray[0], isFinal), parameterArray[1]));
             }
         }
         HandleCodeLines.functionSymbols.put(name, innerArray);
@@ -239,7 +247,8 @@ public class HandleFunction {
 
     /*
      * Checks if the type of a function parameter matches the expected type.
-     * This method allows implicit type conversions where applicable (e.g., int to double, int/double to boolean).
+     * This method allows implicit type conversions where applicable
+     * (e.g., int to double, int/double to boolean).
      *
      * @param funcType The expected function parameter type.
      * @param callType The actual type being passed in the function call.
@@ -276,7 +285,8 @@ public class HandleFunction {
             throw new FunctionCallException(FUNCTION_CALL_ERROR);
         }
         String name = line.split(OPENING_PARENTHESES_REGEX)[0].trim();
-        String parameterPart = line.substring(line.indexOf(OPENING_PARENTHESES) + 1, line.indexOf(CLOSING_PARENTHESES));
+        String parameterPart = line.substring(line.indexOf(OPENING_PARENTHESES) + 1,
+                line.indexOf(CLOSING_PARENTHESES));
         String[] parameters = parameterPart.split(COMMA);
         ArrayList<String> types = new ArrayList<>();
         for (String parameter : parameters) {

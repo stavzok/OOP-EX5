@@ -72,13 +72,14 @@ public class HandleWhile {
             HandleCodeLines.NAME_MATCHER.reset(line);
             while(HandleCodeLines.NAME_MATCHER.find()) {
                 String foundName = HandleCodeLines.NAME_MATCHER.group();
-                // check if a variable inside the while statement is not initialized or is not of a correct type
+                // check if a variable inside the while is not initialized or is not of a correct type
                 for(int i = HandleCodeLines.currScopeLevel; i > -1; i--) {
                     if(i == 0) {
                         if(HandleCodeLines.globalSymbolsTable.containsKey(foundName)) {
                             // global symbol table
                             if (!HandleCodeLines.globalSymbolsTable.get(foundName).getValue().getValue()
-                                    || !validTypes.contains(HandleCodeLines.globalSymbolsTable.get(foundName).getKey())) {
+                                    || !validTypes.contains(HandleCodeLines.globalSymbolsTable.
+                                    get(foundName).getKey())) {
                                 throw new WhileException(WHILE_CONDITION_COMPONENTS_ERROR);
                             }
                             break;
@@ -88,7 +89,8 @@ public class HandleWhile {
                     else if(HandleCodeLines.localSymbolsTable.containsKey(foundName + UNDER_SCORE + i)) {
                         foundName = foundName + UNDER_SCORE + i;
                         if (!HandleCodeLines.localSymbolsTable.get(foundName).getValue().getValue()
-                                || !validTypes.contains(HandleCodeLines.localSymbolsTable.get(foundName).getKey()))
+                                || !validTypes.contains(HandleCodeLines.localSymbolsTable.
+                                get(foundName).getKey()))
                         {
                             throw new WhileException(WHILE_CONDITION_COMPONENTS_ERROR);
                         }

@@ -26,12 +26,28 @@ public class HandleCodeLines {
     private final Matcher COMMENT_START_MATCHER = COMMENT_START.matcher("");
 
     /**
-     * Regular expressions and patterns for variable names, integers, and doubles.
+     * Regular expression for variable names.
      */
     public static final String NAME_REGEX = "([a-zA-Z]|_[a-zA-Z0-9])(_?[a-zA-Z0-9])*_?";
+
+    /**
+     * Regular pattern for variable names.
+     */
     public static final Pattern NAME_PATTERN = Pattern.compile(NAME_REGEX);
+
+    /**
+     * The matcher for the variable names.
+     */
     public static final Matcher NAME_MATCHER = NAME_PATTERN.matcher("");
+
+    /**
+     * Regular expression for integers.
+     */
     public static final String INT_REGEX = "[+-]?\\d+";
+
+    /**
+     * Regular expression for doubles.
+     */
     public static final String DOUBLE_REGEX = "[+-]?(\\d+(\\.\\d*)?|\\.\\d+)";
 
     /**
@@ -40,16 +56,24 @@ public class HandleCodeLines {
     public static int currScopeLevel = 0;
 
     /**
-     * Symbol tables for global and local variables.
+     * Symbol table for global variables.
      * Maps variable names to their types, final and initialization states.
      */
-    public static HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> globalSymbolsTable = new HashMap<>();
-    public static HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> localSymbolsTable = new HashMap<>();
+    public static HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> globalSymbolsTable
+            = new HashMap<>();
+
+    /**
+     * Symbol table for local variables.
+     * Maps variable names to their types, final and initialization states.
+     */
+    public static HashMap<String, Map.Entry<String, Map.Entry<Boolean, Boolean>>> localSymbolsTable =
+            new HashMap<>();
 
     /**
      * Stores function symbols, mapping function names to their parameters.
      */
-    public static HashMap<String, ArrayList<Map.Entry<Map.Entry<String, Boolean>, String>>> functionSymbols = new HashMap<>();
+    public static HashMap<String, ArrayList<Map.Entry<Map.Entry<String, Boolean>, String>>> functionSymbols =
+            new HashMap<>();
 
     /*
      * Regular expression pattern for detecting return statements.
@@ -150,7 +174,7 @@ public class HandleCodeLines {
         }
     }
 
-    /**
+    /*
      * Processes a single line of code, validating its structure.
      * This method checks for illegal comments, empty lines, function
      * declarations, and variable assignments.
@@ -176,7 +200,8 @@ public class HandleCodeLines {
         if(line.isEmpty()){
             return;
         }
-        if (!(line.endsWith(SEMICOLON) || line.endsWith(OPENING_BRACKET) || line.endsWith(CLOSING_BRACKET))) {
+        if (!(line.endsWith(SEMICOLON) || line.endsWith(OPENING_BRACKET) ||
+                line.endsWith(CLOSING_BRACKET))) {
             throw new TypeOneException(END_OF_LINE_ERROR);
         }
 
